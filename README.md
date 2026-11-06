@@ -3,8 +3,25 @@
 Cross-platform client (Android, iOS, Web, Windows) for **ServiceHub**, an Employee & Field Service
 Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 
-> Status: **Phase 2 — app foundation + authentication** is complete: splash, login, register,
-> session restore, logout and a role-aware dashboard placeholder.
+> Status: authentication (login, register, forgot/reset password, session restore), a role-aware
+> dashboard, **Employees** (list with search/filters/pagination, details, create/edit/delete) and
+> **Departments** (admin CRUD) are complete.
+
+## Screens
+
+| Screen | Who |
+|---|---|
+| Splash, Login, Register, Forgot password, Reset password | Everyone |
+| Dashboard | Signed-in users (tiles differ by role) |
+| Employees list / details / create / edit | Admin, Manager (managers can't delete or assign roles) |
+| Departments | Admin |
+
+Role rules are enforced by the backend; the app mirrors them (router guards and hidden buttons)
+so users never see actions that would fail.
+
+**New employee onboarding:** when an admin/manager creates an employee, the backend emails a setup
+code (printed to the backend console for now). The employee opens the app, taps
+*Forgot password?* → *I already have a code*, and sets their password.
 
 ## Tech Stack
 
@@ -64,13 +81,15 @@ lib/
 │   ├── exceptions/   ApiException (maps Dio errors + backend validation details)
 │   ├── theme/        Material 3 theme
 │   └── utils/        form validators (mirror backend rules)
-├── models/           User, UserRole
-├── services/         api_service, auth_service, storage_service
-├── providers/        Riverpod providers (services, auth state)
-├── routes/           GoRouter config
+├── models/           User, Employee, Department, EmployeeQuery, Paginated<T>
+├── services/         api, auth, storage, employee, department services
+├── providers/        Riverpod providers (services, auth, employees, departments)
+├── routes/           GoRouter config + role guards
 ├── screens/
-│   ├── auth/         splash, login, register
-│   └── dashboard/
+│   ├── auth/         splash, login, register, forgot/reset password
+│   ├── dashboard/
+│   ├── employees/    list, details, create/edit form
+│   └── departments/
 ├── widgets/          shared UI components
 ├── app.dart
 └── main.dart

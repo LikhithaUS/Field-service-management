@@ -81,7 +81,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 errorText: _error?.fieldErrors['password'],
                 onSubmitted: (_) => _submit(),
               ),
-              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _loading ? null : () => context.go(AppRoutes.forgotPassword),
+                  child: const Text('Forgot password?'),
+                ),
+              ),
+              const SizedBox(height: 8),
               LoadingButton(label: 'Sign in', loading: _loading, onPressed: _submit),
               const SizedBox(height: 16),
               Wrap(

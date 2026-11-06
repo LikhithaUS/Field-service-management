@@ -4,10 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
+import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
+import '../screens/auth/reset_password_screen.dart';
 import '../screens/auth/splash_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
+import '../screens/departments/departments_screen.dart';
+import '../screens/employees/employee_details_screen.dart';
+import '../screens/employees/employee_form_screen.dart';
+import '../screens/employees/employee_list_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -15,9 +21,36 @@ class AppRoutes {
   static const splash = '/splash';
   static const login = '/login';
   static const register = '/register';
+  static const forgotPassword = '/forgot-password';
+  static const resetPassword = '/reset-password';
   static const dashboard = '/dashboard';
+  static const employees = '/employees';
+  static const employeeNew = '/employees/new';
+  static const departments = '/departments';
 
-  static const _public = {login, register};
+  static String employeeDetail(String id) => '/employees/$id';
+  static String employeeEdit(String id) => '/employees/$id/edit';
+  static String resetPasswordFor(String email) =>
+      Uri(path: resetPassword, queryParameters: email.isEmpty ? null : {'email': email}).toString();
+
+  /// Reachable without signing in.
+  static const _public = {login, register, forgotPassword, resetPassword};
+
+  /// Route prefix -> roles allowed. Mirrors the backend's RBAC so users never land on
+  /// a screen whose API calls would all return 403.
+  static const _roleGuards = <String, Set<UserRole>>{
+    employees: {UserRole.admin, UserRole.manager},
+    departments: {UserRole.admin},
+  };
+
+  static bool canAccess(User user, String location) {
+    for (final entry in _roleGuards.entries) {
+      if (location == entry.key || location.startsWith('${entry.key}/')) {
+        return entry.value.contains(user.role);
+      }
+    }
+    return true;
+  }
 }
 
 /// The router is created once. Instead of rebuilding it on auth changes (which would
@@ -40,18 +73,43 @@ final routerProvider = Provider<GoRouter>((ref) {
         return location == AppRoutes.splash ? null : AppRoutes.splash;
       }
 
-      final loggedIn = auth.value != null;
+      final user = auth.value;
       final onPublic = AppRoutes._public.contains(location);
 
-      if (!loggedIn) return onPublic ? null : AppRoutes.login;
+      if (user == null) return onPublic ? null : AppRoutes.login;
       if (onPublic || location == AppRoutes.splash) return AppRoutes.dashboard;
+      if (!AppRoutes.canAccess(user, location)) return AppRoutes.dashboard;
       return null;
     },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: AppRoutes.register, builder: (context, state) => const RegisterScreen()),
+      GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (context, state) => ResetPasswordScreen(initialEmail: state.uri.queryParameters['email'] ?? ''),
+      ),
       GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const DashboardScreen()),
+      GoRoute(
+        path: AppRoutes.employees,
+        builder: (context, state) => const EmployeeListScreen(),
+        routes: [
+          // 'new' must come before ':id' so it isn't treated as an id.
+          GoRoute(path: 'new', builder: (context, state) => const EmployeeFormScreen()),
+          GoRoute(
+            path: ':id',
+            builder: (context, state) => EmployeeDetailsScreen(employeeId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => EmployeeFormScreen(employeeId: state.pathParameters['id']),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(path: AppRoutes.departments, builder: (context, state) => const DepartmentsScreen()),
     ],
   );
 });

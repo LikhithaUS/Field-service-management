@@ -20,9 +20,15 @@ class ApiConstants {
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 20);
 
-  // Endpoints
+  // Auth
   static const String login = '/auth/login';
   static const String register = '/auth/register';
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
+
+  // Resources
+  static const String employees = '/employees';
+  static const String departments = '/departments';
 }

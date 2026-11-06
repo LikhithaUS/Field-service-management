@@ -25,6 +25,13 @@ class Validators {
     return null;
   }
 
+  /// Optional field; same pattern as the backend (digits, spaces, +, -, parentheses).
+  static String? phone(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    if (!RegExp(r'^[+\d][\d\s()-]{5,29}$').hasMatch(value.trim())) return 'Enter a valid phone number';
+    return null;
+  }
+
   static String? Function(String?) confirmPassword(String Function() original) {
     return (value) {
       if (value == null || value.isEmpty) return 'Please confirm your password';

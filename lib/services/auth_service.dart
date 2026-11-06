@@ -53,6 +53,21 @@ class AuthService {
 
   Future<void> clearLocalSession() => _storage.clearToken();
 
+  /// Asks the backend to email a 6-digit code. Returns the server's (deliberately generic) message.
+  Future<String> forgotPassword(String email) async {
+    final body = await _api.post(ApiConstants.forgotPassword, data: {'email': email.trim()});
+    return body['message'] as String? ?? 'If an account exists for that email, a reset code has been sent.';
+  }
+
+  /// Sets a new password using the emailed code; the backend also logs the user in.
+  Future<User> resetPassword({required String email, required String code, required String password}) async {
+    final body = await _api.post(
+      ApiConstants.resetPassword,
+      data: {'email': email.trim(), 'code': code.trim(), 'password': password},
+    );
+    return _saveSession(body);
+  }
+
   Future<User> _saveSession(Map<String, dynamic> body) async {
     final data = body['data'] as Map<String, dynamic>;
     await _storage.saveToken(data['token'] as String);

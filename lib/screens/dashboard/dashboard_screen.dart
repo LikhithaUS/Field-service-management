@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
+import '../../routes/app_router.dart';
 
-/// Placeholder home screen proving the end-to-end auth flow. Each tile is a module
-/// from the plan; they light up as the modules are built. Tiles differ by role.
+/// Home screen. Each tile is a module from the plan; tiles with a route are live,
+/// the rest light up as modules are built. Tiles differ by role.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   static const _modules = <_Module>[
-    _Module('Employees', Icons.badge_outlined, {UserRole.admin, UserRole.manager}),
-    _Module('Departments', Icons.apartment_outlined, {UserRole.admin}),
+    _Module('Employees', Icons.badge_outlined, {UserRole.admin, UserRole.manager}, route: AppRoutes.employees),
+    _Module('Departments', Icons.apartment_outlined, {UserRole.admin}, route: AppRoutes.departments),
     _Module('Tasks', Icons.task_alt_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
     _Module('Attendance', Icons.schedule_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
     _Module('Leave', Icons.beach_access_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
@@ -84,13 +86,17 @@ class DashboardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    GridView.count(
-                      crossAxisCount: columns,
+                    GridView(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 1.5,
+                      // Fixed tile height (not an aspect ratio) so tiles never get too
+                      // short for their content on narrow phones.
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        mainAxisExtent: 128,
+                      ),
                       children: [for (final m in modules) _ModuleCard(module: m)],
                     ),
                   ],
@@ -105,10 +111,11 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _Module {
-  const _Module(this.title, this.icon, this.roles);
+  const _Module(this.title, this.icon, this.roles, {this.route});
   final String title;
   final IconData icon;
   final Set<UserRole> roles;
+  final String? route; // null = not built yet
 }
 
 class _ModuleCard extends StatelessWidget {
@@ -118,17 +125,32 @@ class _ModuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final live = module.route != null;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(module.icon, color: scheme.primary, size: 28),
-            const Spacer(),
-            Text(module.title, style: Theme.of(context).textTheme.titleMedium),
-            Text('Coming soon', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12)),
-          ],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: live ? () => context.push(module.route!) : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(module.icon, color: live ? scheme.primary : scheme.outline, size: 28),
+              const Spacer(),
+              Text(
+                module.title,
+                style: Theme.of(context).textTheme.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                live ? 'Open' : 'Coming soon',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: live ? scheme.primary : scheme.onSurfaceVariant, fontSize: 12),
+              ),
+            ],
+          ),
         ),
       ),
     );

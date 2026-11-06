@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/department_service.dart';
+import '../services/employee_service.dart';
 import '../services/storage_service.dart';
 
 /// Dependency injection: services are exposed as providers so they can be
@@ -17,4 +19,10 @@ final authServiceProvider = Provider<AuthService>(
     api: ref.watch(apiServiceProvider),
     storage: ref.watch(storageServiceProvider),
   ),
+);
+
+final employeeServiceProvider = Provider<EmployeeService>((ref) => EmployeeService(ref.watch(apiServiceProvider)));
+
+final departmentServiceProvider = Provider<DepartmentService>(
+  (ref) => DepartmentService(ref.watch(apiServiceProvider)),
 );
