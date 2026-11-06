@@ -3,8 +3,8 @@
 REST API for **ServiceHub**, an Employee & Field Service Management Platform.
 Built with Node.js, Express 5, MongoDB (Mongoose), JWT authentication and role-based access control.
 
-> Status: **Phase 1 — project setup + authentication** is complete. Employees, departments, tasks,
-> attendance, leaves, notifications and dashboard modules are coming next.
+> Status: authentication (incl. forgot/reset password), **employees** and **departments** are complete.
+> Tasks, attendance, leaves, notifications and dashboard modules are coming next.
 
 ## Tech Stack
 
@@ -22,7 +22,8 @@ Built with Node.js, Express 5, MongoDB (Mongoose), JWT authentication and role-b
 ```bash
 npm install
 cp .env.example .env      # then fill in MONGODB_URI and JWT_SECRET
-npm run seed:admin        # optional: creates the first admin from ADMIN_* vars
+npm run seed:admin        # creates the first admin from ADMIN_* vars
+npm run seed:departments  # optional: IT, HR, Finance, Marketing, Sales, Operations
 npm run dev               # starts on http://localhost:5000 with auto-reload
 ```
 
@@ -40,6 +41,7 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 | `npm start` | Start in production mode |
 | `npm test` | Run the Jest test suite against an in-memory MongoDB |
 | `npm run seed:admin` | Create the first admin account |
+| `npm run seed:departments` | Create the default departments |
 
 ## Environment Variables
 
@@ -72,8 +74,52 @@ All responses share one shape:
 | POST | `/api/auth/login` | Public | Returns `{ token, user }` |
 | POST | `/api/auth/logout` | Authenticated | Revokes all of the user's existing tokens |
 | GET | `/api/auth/me` | Authenticated | Current user |
+| POST | `/api/auth/forgot-password` | Public | Emails a 6-digit code (same response whether or not the email exists) |
+| POST | `/api/auth/reset-password` | Public | `{ email, code, password }`; sets password, revokes old sessions, returns `{ token, user }` |
 
 Protected requests send `Authorization: Bearer <token>`.
+
+### Departments
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/departments` | Authenticated | All departments with `employeeCount` |
+| GET | `/api/departments/:id` | Authenticated | One department |
+| POST | `/api/departments` | Admin | Create (`name` unique, case-insensitive) |
+| PUT | `/api/departments/:id` | Admin | Update |
+| DELETE | `/api/departments/:id` | Admin | Delete (409 while employees are assigned) |
+
+### Employees
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/employees` | Admin, Manager | `?search=&department=<id\|none>&role=&status=&sort=&page=&limit=` |
+| GET | `/api/employees/:id` | Admin, Manager | One employee (department populated) |
+| POST | `/api/employees` | Admin, Manager | Creates the record **and** login account; emails a setup code |
+| PUT | `/api/employees/:id` | Admin, Manager | Update; syncs name/email/role/status to the login account |
+| DELETE | `/api/employees/:id` | Admin | Deletes the record and login account |
+
+List responses: `{ items: [...], pagination: { page, limit, total, totalPages } }`.
+
+**Business rules**
+
+- Managers can only create/edit users with the `employee` role and cannot change roles or delete.
+- Admins cannot change their own role, deactivate themselves or delete themselves.
+- Setting `status: inactive` blocks login and revokes the person's sessions immediately.
+- Creating an employee whose email belongs to a self-registered account links that account
+  instead of creating a second one.
+
+## Password Reset & Account Setup
+
+One mechanism serves both "forgot password" and new employees choosing their first password:
+
+- A 6-digit code from `crypto.randomInt` is emailed; only an **HMAC-SHA256** of it is stored
+  (a plain hash of 6 digits could be brute-forced from a DB leak).
+- Reset codes expire after 15 minutes, setup codes after 3 days. Codes are single-use and locked
+  after 5 wrong attempts. They are compared with `crypto.timingSafeEqual`.
+- A successful reset bumps `tokenVersion`, signing out every other session.
+- **Email transport:** currently *console*, so emails are printed to the server log.
+  `src/services/email.service.js` is the single place to plug in SMTP (Nodemailer) or Resend later.
 
 ## Authentication & RBAC Design
 
