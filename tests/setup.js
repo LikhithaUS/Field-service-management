@@ -13,11 +13,14 @@ let mongo;
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
+  // Build unique indexes up front so duplicate checks work from the first test.
+  await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
 });
 
 afterEach(async () => {
   const { collections } = mongoose.connection;
   await Promise.all(Object.values(collections).map((c) => c.deleteMany({})));
+  require('../src/services/email.service').outbox.length = 0;
 });
 
 afterAll(async () => {

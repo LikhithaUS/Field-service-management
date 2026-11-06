@@ -5,7 +5,12 @@ const { config } = require('../config/env');
 const controller = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth');
 const validate = require('../middleware/validate');
-const { registerRules, loginRules } = require('../validators/auth.validators');
+const {
+  registerRules,
+  loginRules,
+  forgotPasswordRules,
+  resetPasswordRules,
+} = require('../validators/auth.validators');
 
 const router = Router();
 
@@ -21,6 +26,8 @@ const authLimiter = rateLimit({
 
 router.post('/register', authLimiter, registerRules, validate, controller.register);
 router.post('/login', authLimiter, loginRules, validate, controller.login);
+router.post('/forgot-password', authLimiter, forgotPasswordRules, validate, controller.forgotPassword);
+router.post('/reset-password', authLimiter, resetPasswordRules, validate, controller.resetPassword);
 router.post('/logout', protect, controller.logout);
 router.get('/me', protect, controller.me);
 

@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     // Incremented on logout / password change; tokens carrying an older version are rejected.
     tokenVersion: { type: Number, default: 0, select: false },
+    // One-time code for password reset / first-time account setup. Only the HMAC hash is stored.
+    resetCodeHash: { type: String, select: false },
+    resetCodeExpiresAt: { type: Date, select: false },
+    resetCodeAttempts: { type: Number, default: 0, select: false },
   },
   { timestamps: true }
 );
@@ -43,6 +47,9 @@ userSchema.set('toJSON', {
     delete ret.__v;
     delete ret.password;
     delete ret.tokenVersion;
+    delete ret.resetCodeHash;
+    delete ret.resetCodeExpiresAt;
+    delete ret.resetCodeAttempts;
     return ret;
   },
 });

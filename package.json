@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed:admin": "node src/scripts/seedAdmin.js",
+    "seed:departments": "node src/scripts/seedDepartments.js",
     "test": "jest --runInBand"
   },
   "engines": {
