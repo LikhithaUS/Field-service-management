@@ -1,0 +1,5 @@
+# Build output and editor files at the repository root
+/build/
+.DS_Store
+.idea/
+.vscode/
