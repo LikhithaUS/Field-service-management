@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart' show DateUtils;
 
+import '../core/utils/api_dates.dart';
+import 'person_ref.dart';
 import 'user.dart';
+
+export 'person_ref.dart';
 
 /// Backend values are snake_case (`in_progress`), so each enum keeps its API value.
 enum TaskStatus {
@@ -36,36 +40,6 @@ enum TaskPriority {
       TaskPriority.values.firstWhere((p) => p.name == value, orElse: () => TaskPriority.medium);
 }
 
-/// The small slice of a user that the backend populates on tasks and comments.
-class TaskPerson {
-  const TaskPerson({required this.id, required this.name, this.email = '', this.role = UserRole.employee, this.employeeId});
-
-  final String id;
-  final String name;
-  final String email;
-  final UserRole role;
-  final String? employeeId;
-
-  String get initials {
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-    if (parts.isEmpty) return '?';
-    if (parts.length == 1) return parts.first[0].toUpperCase();
-    return (parts.first[0] + parts.last[0]).toUpperCase();
-  }
-
-  /// A populated reference is an object; if the account was deleted it can be null.
-  static TaskPerson? fromJson(Object? json) {
-    if (json is! Map) return null;
-    return TaskPerson(
-      id: (json['id'] ?? json['_id']) as String,
-      name: json['name'] as String? ?? 'Unknown',
-      email: json['email'] as String? ?? '',
-      role: UserRole.fromString(json['role'] as String?),
-      employeeId: json['employeeId'] as String?,
-    );
-  }
-}
-
 class Task {
   const Task({
     required this.id,
@@ -88,8 +62,8 @@ class Task {
   final String title;
   final String description;
   final String location;
-  final TaskPerson? assignedTo;
-  final TaskPerson? assignedBy;
+  final PersonRef? assignedTo;
+  final PersonRef? assignedBy;
   final TaskPriority priority;
   final TaskStatus status;
 
@@ -113,8 +87,8 @@ class Task {
         title: json['title'] as String,
         description: json['description'] as String? ?? '',
         location: json['location'] as String? ?? '',
-        assignedTo: TaskPerson.fromJson(json['assignedTo']),
-        assignedBy: TaskPerson.fromJson(json['assignedBy']),
+        assignedTo: PersonRef.fromJson(json['assignedTo']),
+        assignedBy: PersonRef.fromJson(json['assignedBy']),
         priority: TaskPriority.fromString(json['priority'] as String?),
         status: TaskStatus.fromString(json['status'] as String?),
         dueDate: parseApiDate(json['dueDate']),
@@ -123,18 +97,10 @@ class Task {
         commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
       );
 
-  /// Date-only values arrive as `2026-12-01T00:00:00.000Z`. Converting that to local time
-  /// would shift it to the previous day west of UTC, so keep the UTC calendar date instead.
-  static DateTime? parseApiDate(Object? value) {
-    if (value is! String) return null;
-    final utc = DateTime.tryParse(value)?.toUtc();
-    return utc == null ? null : DateTime(utc.year, utc.month, utc.day);
-  }
+  static DateTime? parseApiDate(Object? value) => ApiDates.parseDate(value);
+  static String toApiDate(DateTime date) => ApiDates.toIso(date);
 
-  /// The inverse of [parseApiDate]: a local calendar date -> midnight UTC ISO string.
-  static String toApiDate(DateTime date) => DateTime.utc(date.year, date.month, date.day).toIso8601String();
-
-  static DateTime? _parseMoment(Object? value) => value is String ? DateTime.tryParse(value)?.toLocal() : null;
+  static DateTime? _parseMoment(Object? value) => ApiDates.parseMoment(value);
 }
 
 class TaskComment {
@@ -142,13 +108,13 @@ class TaskComment {
 
   final String id;
   final String message;
-  final TaskPerson? user;
+  final PersonRef? user;
   final DateTime? createdAt;
 
   factory TaskComment.fromJson(Map<String, dynamic> json) => TaskComment(
         id: (json['id'] ?? json['_id']) as String,
         message: json['message'] as String,
-        user: TaskPerson.fromJson(json['user']),
-        createdAt: json['createdAt'] is String ? DateTime.tryParse(json['createdAt'] as String)?.toLocal() : null,
+        user: PersonRef.fromJson(json['user']),
+        createdAt: ApiDates.parseMoment(json['createdAt']),
       );
 }

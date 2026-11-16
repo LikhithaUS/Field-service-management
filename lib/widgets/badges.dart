@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/attendance.dart';
 import '../models/employee.dart';
 import '../models/task.dart';
 import '../models/user.dart';
@@ -106,6 +107,27 @@ class PriorityBadge extends StatelessWidget {
         _Pill(label: priority.label, background: scheme.secondaryContainer, foreground: scheme.onSecondaryContainer),
       TaskPriority.high => _Pill(label: priority.label, background: scheme.errorContainer, foreground: scheme.onErrorContainer),
       TaskPriority.urgent => _Pill(label: priority.label, background: scheme.error, foreground: scheme.onError),
+    };
+  }
+}
+
+class AttendanceStatusBadge extends StatelessWidget {
+  const AttendanceStatusBadge({super.key, required this.status});
+
+  final AttendanceStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (status) {
+      AttendanceStatus.present =>
+        _Pill(label: status.label, background: scheme.tertiaryContainer, foreground: scheme.onTertiaryContainer),
+      AttendanceStatus.late => _Pill(label: status.label, background: scheme.errorContainer, foreground: scheme.onErrorContainer),
+      AttendanceStatus.halfDay =>
+        _Pill(label: status.label, background: scheme.secondaryContainer, foreground: scheme.onSecondaryContainer),
+      AttendanceStatus.absent => _Pill(label: status.label, background: scheme.error, foreground: scheme.onError),
+      AttendanceStatus.leave =>
+        _Pill(label: status.label, background: scheme.primaryContainer, foreground: scheme.onPrimaryContainer),
     };
   }
 }

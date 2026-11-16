@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:fsm_app/app.dart';
+import 'package:fsm_app/models/attendance.dart';
+import 'package:fsm_app/models/attendance_query.dart';
 import 'package:fsm_app/models/department.dart';
 import 'package:fsm_app/models/employee.dart';
 import 'package:fsm_app/models/employee_query.dart';
@@ -13,6 +15,7 @@ import 'package:fsm_app/models/task_query.dart';
 import 'package:fsm_app/models/user.dart';
 import 'package:fsm_app/providers/service_providers.dart';
 import 'package:fsm_app/services/api_service.dart';
+import 'package:fsm_app/services/attendance_service.dart';
 import 'package:fsm_app/services/auth_service.dart';
 import 'package:fsm_app/services/department_service.dart';
 import 'package:fsm_app/services/employee_service.dart';
@@ -27,6 +30,8 @@ class MockEmployeeService extends Mock implements EmployeeService {}
 class MockDepartmentService extends Mock implements DepartmentService {}
 
 class MockTaskService extends Mock implements TaskService {}
+
+class MockAttendanceService extends Mock implements AttendanceService {}
 
 const adminUser = User(id: 'u1', name: 'Root Admin', email: 'root@example.com', role: UserRole.admin, employeeId: 'EMP-0001');
 const managerUser = User(id: 'u2', name: 'Maya Manager', email: 'maya@example.com', role: UserRole.manager);
@@ -46,7 +51,7 @@ Employee makeEmployee(int n, {UserRole role = UserRole.employee, Department? dep
       joiningDate: DateTime(2026, 1, n),
     );
 
-TaskPerson personFrom(User u) => TaskPerson(id: u.id, name: u.name, email: u.email, role: u.role);
+PersonRef personFrom(User u) => PersonRef(id: u.id, name: u.name, email: u.email, role: u.role);
 
 Task makeTask(
   int n, {
@@ -69,6 +74,9 @@ Task makeTask(
       createdAt: DateTime(2026, 11, 1, 9, 30),
     );
 
+AttendanceHistory historyOf(List<AttendanceRecord> items, {AttendanceSummary summary = const AttendanceSummary(), int total = -1}) =>
+    AttendanceHistory(page: pageOf(items, total: total), summary: summary);
+
 Paginated<T> pageOf<T>(List<T> items, {int page = 1, int total = -1, int limit = 10}) {
   final t = total < 0 ? items.length : total;
   return Paginated(items: items, page: page, limit: limit, total: t, totalPages: (t / limit).ceil().clamp(1, 1 << 30));
@@ -79,6 +87,7 @@ class TestServices {
   final employees = MockEmployeeService();
   final departments = MockDepartmentService();
   final tasks = MockTaskService();
+  final attendance = MockAttendanceService();
 
   TestServices({User? signedInAs}) {
     when(() => auth.currentUser()).thenAnswer((_) async => signedInAs);
@@ -90,6 +99,7 @@ void registerTestFallbacks() {
   registerFallbackValue(const EmployeeQuery());
   registerFallbackValue(const TaskQuery());
   registerFallbackValue(TaskStatus.pending);
+  registerFallbackValue(AttendanceQuery.today());
   registerFallbackValue(<String, dynamic>{});
 }
 
@@ -106,6 +116,7 @@ Future<void> pumpApp(WidgetTester tester, TestServices services, {Size size = co
       employeeServiceProvider.overrideWithValue(services.employees),
       departmentServiceProvider.overrideWithValue(services.departments),
       taskServiceProvider.overrideWithValue(services.tasks),
+      attendanceServiceProvider.overrideWithValue(services.attendance),
     ],
     child: const ServiceHubApp(),
   ));

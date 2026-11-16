@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
+import '../screens/attendance/attendance_report_screen.dart';
+import '../screens/attendance/attendance_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -32,6 +34,8 @@ class AppRoutes {
   static const departments = '/departments';
   static const tasks = '/tasks';
   static const taskNew = '/tasks/new';
+  static const attendance = '/attendance';
+  static const attendanceReport = '/attendance/report';
 
   static String employeeDetail(String id) => '/employees/$id';
   static String employeeEdit(String id) => '/employees/$id/edit';
@@ -50,9 +54,10 @@ class AppRoutes {
     departments: {UserRole.admin},
   };
 
-  /// Exact screens inside an otherwise open section. `/tasks` is for everyone,
-  /// but only staff create or edit tasks.
+  /// Exact screens inside an otherwise open section. `/tasks` and `/attendance` are for
+  /// everyone, but only staff create/edit tasks or see the team attendance report.
   static final _patternGuards = <RegExp, Set<UserRole>>{
+    RegExp(r'^/attendance/report$'): {UserRole.admin, UserRole.manager},
     RegExp(r'^/tasks/new$'): {UserRole.admin, UserRole.manager},
     RegExp(r'^/tasks/[^/]+/edit$'): {UserRole.admin, UserRole.manager},
   };
@@ -127,6 +132,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: AppRoutes.departments, builder: (context, state) => const DepartmentsScreen()),
+      GoRoute(
+        path: AppRoutes.attendance,
+        builder: (context, state) => const AttendanceScreen(),
+        routes: [GoRoute(path: 'report', builder: (context, state) => const AttendanceReportScreen())],
+      ),
       GoRoute(
         path: AppRoutes.tasks,
         builder: (context, state) => const TaskListScreen(),

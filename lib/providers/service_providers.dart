@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/api_service.dart';
+import '../services/attendance_service.dart';
 import '../services/auth_service.dart';
 import '../services/department_service.dart';
 import '../services/employee_service.dart';
@@ -29,3 +30,7 @@ final departmentServiceProvider = Provider<DepartmentService>(
 );
 
 final taskServiceProvider = Provider<TaskService>((ref) => TaskService(ref.watch(apiServiceProvider)));
+
+final attendanceServiceProvider = Provider<AttendanceService>(
+  (ref) => AttendanceService(ref.watch(apiServiceProvider)),
+);

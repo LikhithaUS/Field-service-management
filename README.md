@@ -5,7 +5,8 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 
 > Status: authentication (login, register, forgot/reset password, session restore), a role-aware
 > dashboard, **Employees** (list with search/filters/pagination, details, create/edit/delete),
-> **Departments** (admin CRUD) and **Tasks** (assignment, status workflow, comments) are complete.
+> **Departments** (admin CRUD), **Tasks** (assignment, status workflow, comments) and
+> **Attendance** (check-in/out, history, team report) are complete.
 
 ## Screens
 
@@ -17,6 +18,8 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 | Departments | Admin |
 | Tasks list / details | Everyone (employees see only *My tasks*) |
 | Create / edit task | Admin, Manager |
+| Attendance (check in/out, this month's history) | Everyone |
+| Team attendance report | Admin, Manager |
 
 Role rules are enforced by the backend; the app mirrors them (router guards and hidden buttons)
 so users never see actions that would fail.
@@ -30,6 +33,11 @@ me"), and set priority, due date and job-site location. The assignee moves it th
 *Start task* → *Mark completed* (and can *Reopen*); only staff can cancel, edit or delete.
 Overdue tasks (still open, due date before today) are highlighted, and each task has a comment
 thread for back-and-forth between the manager and the employee.
+
+**Attendance:** a live clock with one *Check in* / *Check out* button per day. "Worked" counts up
+while checked in. The backend decides *late* / *half day* from the company rules it sends back
+(work start time, half-day hours), so the app never hard-codes them. Staff open *Team report* to see
+everyone's records for a day or date range, filter by person or status, and see totals.
 
 ## Tech Stack
 

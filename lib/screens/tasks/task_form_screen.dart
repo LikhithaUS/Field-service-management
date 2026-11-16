@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,18 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/exceptions/api_exception.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/validators.dart';
-import '../../models/employee.dart';
-import '../../models/employee_query.dart';
-import '../../models/paginated.dart';
 import '../../models/task.dart';
-import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/service_providers.dart';
 import '../../providers/task_providers.dart';
 import '../../routes/app_router.dart';
-import '../../widgets/badges.dart';
 import '../../widgets/error_banner.dart';
 import '../../widgets/loading_button.dart';
+import '../../widgets/person_picker_dialog.dart';
 import '../../widgets/state_views.dart';
 
 /// Create (taskId == null) or edit a task. Admins and managers only (guarded by the router).
@@ -64,7 +58,7 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
   late final _title = TextEditingController(text: widget.initial?.title);
   late final _description = TextEditingController(text: widget.initial?.description);
   late final _location = TextEditingController(text: widget.initial?.location);
-  late TaskPerson? _assignee = widget.initial?.assignedTo;
+  late PersonRef? _assignee = widget.initial?.assignedTo;
   late TaskPriority _priority = widget.initial?.priority ?? TaskPriority.medium;
   late TaskStatus _status = widget.initial?.status ?? TaskStatus.pending;
   late DateTime? _dueDate = widget.initial?.dueDate;
@@ -168,15 +162,15 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
                 ),
                 gap,
                 // FormField so "assignee is required" goes through the same validate() call.
-                FormField<TaskPerson>(
+                FormField<PersonRef>(
                   initialValue: _assignee,
                   validator: (v) => v == null ? 'Choose who the task is assigned to' : null,
                   builder: (field) => InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () async {
-                      final picked = await showDialog<TaskPerson>(
+                      final picked = await showDialog<PersonRef>(
                         context: context,
-                        builder: (_) => AssigneePickerDialog(viewer: viewer),
+                        builder: (_) => PersonPickerDialog(viewer: viewer, title: 'Assign to', selfLabel: 'Assign to me'),
                       );
                       if (picked == null) return;
                       setState(() => _assignee = picked);
@@ -249,108 +243,6 @@ class _TaskFormState extends ConsumerState<_TaskForm> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Searchable list of active employees with a login account, plus "Assign to me".
-/// Returns the chosen person's *user* id, since tasks are assigned to accounts.
-class AssigneePickerDialog extends ConsumerStatefulWidget {
-  const AssigneePickerDialog({super.key, required this.viewer});
-
-  final User viewer;
-
-  @override
-  ConsumerState<AssigneePickerDialog> createState() => _AssigneePickerDialogState();
-}
-
-class _AssigneePickerDialogState extends ConsumerState<AssigneePickerDialog> {
-  late Future<Paginated<Employee>> _results = _load('');
-  Timer? _debounce;
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  Future<Paginated<Employee>> _load(String search) => ref
-      .read(employeeServiceProvider)
-      .list(EmployeeQuery(search: search.trim(), status: EmployeeStatus.active, limit: 20));
-
-  void _onSearchChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 350), () => setState(() => _results = _load(value)));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final me = widget.viewer;
-
-    return AlertDialog(
-      title: const Text('Assign to'),
-      contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      content: SizedBox(
-        width: 420,
-        height: 420,
-        child: Column(
-          children: [
-            TextField(
-              autofocus: true,
-              onChanged: _onSearchChanged,
-              decoration: const InputDecoration(hintText: 'Search employees…', prefixIcon: Icon(Icons.search)),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: const Text('Assign to me'),
-              subtitle: Text(me.name),
-              onTap: () => Navigator.pop(
-                context,
-                TaskPerson(id: me.id, name: me.name, email: me.email, role: me.role, employeeId: me.employeeId),
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: FutureBuilder<Paginated<Employee>>(
-                future: _results,
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    final e = snapshot.error;
-                    return Center(child: Text(e is ApiException ? e.message : 'Could not load employees'));
-                  }
-                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-
-                  // Employees without a linked account can't sign in, so they can't be assigned.
-                  final people = snapshot.data!.items.where((e) => e.userId != null && e.userId != me.id).toList();
-                  if (people.isEmpty) return const Center(child: Text('No matching employees'));
-
-                  return ListView.builder(
-                    itemCount: people.length,
-                    itemBuilder: (context, i) {
-                      final e = people[i];
-                      return ListTile(
-                        leading: InitialsAvatar(initials: e.initials),
-                        title: Text(e.name),
-                        subtitle: Text(
-                          [e.employeeId, if (e.designation.isNotEmpty) e.designation].join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () => Navigator.pop(
-                          context,
-                          TaskPerson(id: e.userId!, name: e.name, email: e.email, role: e.role, employeeId: e.employeeId),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))],
     );
   }
 }
