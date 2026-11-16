@@ -17,6 +17,13 @@ const config = {
   bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
   // Comma-separated list of allowed origins for CORS (e.g. the Flutter Web URL). "*" allows all.
   corsOrigins: (process.env.CORS_ORIGINS || '*').split(',').map((o) => o.trim()),
+  attendance: {
+    // The company's time zone decides which calendar day a check-in belongs to and whether it's late,
+    // so results don't depend on where the server happens to run.
+    timeZone: process.env.APP_TIMEZONE || 'Asia/Kolkata',
+    workStart: process.env.WORK_START_TIME || '09:30', // HH:mm; checking in after this is "late"
+    halfDayHours: Number(process.env.HALF_DAY_HOURS) || 4, // working less than this is a "half day"
+  },
 };
 
 // Fail fast on startup if a required secret is missing (tests inject their own values).

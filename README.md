@@ -3,8 +3,8 @@
 REST API for **ServiceHub**, an Employee & Field Service Management Platform.
 Built with Node.js, Express 5, MongoDB (Mongoose), JWT authentication and role-based access control.
 
-> Status: authentication (incl. forgot/reset password), **employees**, **departments** and **tasks**
-> (with comments) are complete. Attendance, leaves, notifications and dashboard modules are coming next.
+> Status: authentication (incl. forgot/reset password), **employees**, **departments**, **tasks**
+> (with comments) and **attendance** are complete. Leaves, notifications and dashboard modules are coming next.
 
 ## Tech Stack
 
@@ -55,6 +55,9 @@ See [`.env.example`](.env.example). The real `.env` is git-ignored and must neve
 | `PORT` | | Default `5000` |
 | `CORS_ORIGINS` | | Comma-separated allowed origins (default `*`) |
 | `BCRYPT_SALT_ROUNDS` | | Default `10` |
+| `APP_TIMEZONE` | | Company time zone for attendance (default `Asia/Kolkata`) |
+| `WORK_START_TIME` | | `HH:mm`; checking in after this is *late* (default `09:30`) |
+| `HALF_DAY_HOURS` | | Working fewer hours is a *half day* (default `4`) |
 
 ## API
 
@@ -135,6 +138,25 @@ List responses: `{ items: [...], pagination: { page, limit, total, totalPages } 
   stored as midnight UTC of the chosen day.
 - Tasks can only be assigned to active accounts. Assignees reference **users** (login accounts),
   because permissions are checked against the signed-in user.
+
+### Attendance
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/attendance/today` | Authenticated | `{ date, attendance \| null, rules }` for the signed-in user |
+| POST | `/api/attendance/check-in` | Authenticated | Creates today's record (409 if already checked in) |
+| POST | `/api/attendance/check-out` | Authenticated | Sets `checkOut` and `workingMinutes` (400 before check-in, 409 if done) |
+| GET | `/api/attendance` | Authenticated | `?from=YYYY-MM-DD&to=&user=&status=&page=&limit=` plus a `summary` of the whole range |
+
+- Statuses: `present`, `late`, `half_day`, `absent`, `leave`.
+- Employees always get their own history; staff see everyone and can filter by `user`.
+- The **work day** is the calendar date in `APP_TIMEZONE`, so results don't depend on the server's
+  location. It is stored as midnight UTC.
+- Check-in after `WORK_START_TIME` → `late`. Check-out with less than `HALF_DAY_HOURS` worked →
+  `half_day` (this also overrides `late`).
+- A unique `(user, date)` index prevents double check-ins, even under concurrent requests.
+- No scheduled job writes `absent` yet: a day without a record counts as absent. `leave` will be
+  written by the leave module.
 
 ## Password Reset & Account Setup
 
