@@ -4,7 +4,7 @@ REST API for **ServiceHub**, an Employee & Field Service Management Platform.
 Built with Node.js, Express 5, MongoDB (Mongoose), JWT authentication and role-based access control.
 
 > Status: authentication (incl. forgot/reset password), **employees**, **departments**, **tasks**
-> (with comments) and **attendance** are complete. Leaves, notifications and dashboard modules are coming next.
+> (with comments), **attendance** and **leave management** are complete. Notifications and dashboard modules are coming next.
 
 ## Tech Stack
 
@@ -157,6 +157,29 @@ List responses: `{ items: [...], pagination: { page, limit, total, totalPages } 
 - A unique `(user, date)` index prevents double check-ins, even under concurrent requests.
 - No scheduled job writes `absent` yet: a day without a record counts as absent. `leave` will be
   written by the leave module.
+
+### Leaves
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/leaves` | Authenticated | `?status=&leaveType=&user=&mine=true&page=&limit=` |
+| GET | `/api/leaves/:id` | Staff, or the requester | One request (`user` and `reviewedBy` populated) |
+| POST | `/api/leaves` | Authenticated | `{ leaveType, startDate, endDate, reason }` (dates `YYYY-MM-DD`) |
+| PUT | `/api/leaves/:id/approve` | Admin, Manager | `{ note? }`; marks the days as `leave` in attendance |
+| PUT | `/api/leaves/:id/reject` | Admin, Manager | `{ note? }` |
+| PUT | `/api/leaves/:id/cancel` | The requester | While pending, or approved and not started yet |
+
+- Types: `casual`, `sick`, `annual`, `other`. Statuses: `pending`, `approved`, `rejected`, `cancelled`.
+
+**Business rules**
+
+- `days` counts **working days** (Mon–Fri); a weekend-only range is rejected.
+- Only **sick** leave may start in the past (it is often reported afterwards).
+- A request may not overlap the same person's pending or approved leave (409).
+- Nobody reviews their own request; managers review employees' requests only, admins review anyone's.
+- Approving writes `leave` attendance records for each working day, skipping days the person
+  actually checked in. Cancelling approved leave removes them again.
+- The requester is emailed when a request is approved or rejected (console transport for now).
 
 ## Password Reset & Account Setup
 

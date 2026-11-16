@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/attendance.dart';
 import '../models/employee.dart';
+import '../models/leave.dart';
 import '../models/task.dart';
 import '../models/user.dart';
 
@@ -128,6 +129,26 @@ class AttendanceStatusBadge extends StatelessWidget {
       AttendanceStatus.absent => _Pill(label: status.label, background: scheme.error, foreground: scheme.onError),
       AttendanceStatus.leave =>
         _Pill(label: status.label, background: scheme.primaryContainer, foreground: scheme.onPrimaryContainer),
+    };
+  }
+}
+
+class LeaveStatusBadge extends StatelessWidget {
+  const LeaveStatusBadge({super.key, required this.status});
+
+  final LeaveStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (status) {
+      LeaveStatus.pending =>
+        _Pill(label: status.label, background: scheme.secondaryContainer, foreground: scheme.onSecondaryContainer),
+      LeaveStatus.approved =>
+        _Pill(label: status.label, background: scheme.tertiaryContainer, foreground: scheme.onTertiaryContainer),
+      LeaveStatus.rejected => _Pill(label: status.label, background: scheme.errorContainer, foreground: scheme.onErrorContainer),
+      LeaveStatus.cancelled =>
+        _Pill(label: status.label, background: scheme.surfaceContainerHighest, foreground: scheme.onSurfaceVariant),
     };
   }
 }

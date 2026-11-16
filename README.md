@@ -15,8 +15,9 @@ Full-stack portfolio project: a cross-platform **Flutter** app (Android, iOS, We
 - Employees & departments: search, filters, pagination, onboarding with emailed setup codes
 - Tasks: assignment, priorities, due dates, status workflow, overdue tracking, comment threads
 - Attendance: check-in / check-out, late & half-day rules, monthly history, team report
+- Leave: apply, approve / reject with notes, working-day counting, linked to attendance
 
-Coming next: leave management, notifications, announcements, dashboard charts, file uploads.
+Coming next: notifications, announcements, dashboard charts, file uploads.
 
 ## Quick start
 

@@ -16,6 +16,10 @@ import '../screens/departments/departments_screen.dart';
 import '../screens/employees/employee_details_screen.dart';
 import '../screens/employees/employee_form_screen.dart';
 import '../screens/employees/employee_list_screen.dart';
+import '../screens/leave/apply_leave_screen.dart';
+import '../screens/leave/leave_details_screen.dart';
+import '../screens/leave/leave_requests_screen.dart';
+import '../screens/leave/leave_screen.dart';
 import '../screens/tasks/task_details_screen.dart';
 import '../screens/tasks/task_form_screen.dart';
 import '../screens/tasks/task_list_screen.dart';
@@ -36,11 +40,15 @@ class AppRoutes {
   static const taskNew = '/tasks/new';
   static const attendance = '/attendance';
   static const attendanceReport = '/attendance/report';
+  static const leave = '/leave';
+  static const leaveApply = '/leave/apply';
+  static const leaveRequests = '/leave/requests';
 
   static String employeeDetail(String id) => '/employees/$id';
   static String employeeEdit(String id) => '/employees/$id/edit';
   static String taskDetail(String id) => '/tasks/$id';
   static String taskEdit(String id) => '/tasks/$id/edit';
+  static String leaveDetail(String id) => '/leave/$id';
   static String resetPasswordFor(String email) =>
       Uri(path: resetPassword, queryParameters: email.isEmpty ? null : {'email': email}).toString();
 
@@ -54,10 +62,11 @@ class AppRoutes {
     departments: {UserRole.admin},
   };
 
-  /// Exact screens inside an otherwise open section. `/tasks` and `/attendance` are for
-  /// everyone, but only staff create/edit tasks or see the team attendance report.
+  /// Exact screens inside an otherwise open section. `/tasks`, `/attendance` and `/leave` are
+  /// for everyone, but only staff create/edit tasks, see the team report or review leave.
   static final _patternGuards = <RegExp, Set<UserRole>>{
     RegExp(r'^/attendance/report$'): {UserRole.admin, UserRole.manager},
+    RegExp(r'^/leave/requests$'): {UserRole.admin, UserRole.manager},
     RegExp(r'^/tasks/new$'): {UserRole.admin, UserRole.manager},
     RegExp(r'^/tasks/[^/]+/edit$'): {UserRole.admin, UserRole.manager},
   };
@@ -136,6 +145,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.attendance,
         builder: (context, state) => const AttendanceScreen(),
         routes: [GoRoute(path: 'report', builder: (context, state) => const AttendanceReportScreen())],
+      ),
+      GoRoute(
+        path: AppRoutes.leave,
+        builder: (context, state) => const LeaveScreen(),
+        routes: [
+          // Fixed paths must come before ':id' so they aren't treated as ids.
+          GoRoute(path: 'apply', builder: (context, state) => const ApplyLeaveScreen()),
+          GoRoute(path: 'requests', builder: (context, state) => const LeaveRequestsScreen()),
+          GoRoute(path: ':id', builder: (context, state) => LeaveDetailsScreen(leaveId: state.pathParameters['id']!)),
+        ],
       ),
       GoRoute(
         path: AppRoutes.tasks,

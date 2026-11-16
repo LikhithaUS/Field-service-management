@@ -36,4 +36,23 @@ function welcomeEmail({ name, email }, { employeeId }, code) {
   };
 }
 
-module.exports = { passwordResetEmail, welcomeEmail };
+const LEAVE_TYPE_LABELS = { casual: 'Casual', sick: 'Sick', annual: 'Annual', other: 'Other' };
+const day = (d) => d.toISOString().slice(0, 10);
+
+// Sent to the employee when a manager approves or rejects their leave request.
+function leaveDecisionEmail({ name, email }, leave, reviewer) {
+  const decision = leave.status === 'approved' ? 'approved' : 'rejected';
+  const range = day(leave.startDate) === day(leave.endDate) ? day(leave.startDate) : `${day(leave.startDate)} to ${day(leave.endDate)}`;
+  return {
+    to: email,
+    subject: `Your leave request was ${decision}`,
+    text: [
+      `Hi ${name},`,
+      '',
+      `Your ${LEAVE_TYPE_LABELS[leave.leaveType]} leave request for ${range} (${leave.days} working day${leave.days === 1 ? '' : 's'}) was ${decision} by ${reviewer.name}.`,
+      ...(leave.reviewNote ? ['', `Note: ${leave.reviewNote}`] : []),
+    ].join('\n'),
+  };
+}
+
+module.exports = { passwordResetEmail, welcomeEmail, leaveDecisionEmail };

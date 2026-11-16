@@ -5,6 +5,7 @@ import '../services/attendance_service.dart';
 import '../services/auth_service.dart';
 import '../services/department_service.dart';
 import '../services/employee_service.dart';
+import '../services/leave_service.dart';
 import '../services/storage_service.dart';
 import '../services/task_service.dart';
 
@@ -34,3 +35,5 @@ final taskServiceProvider = Provider<TaskService>((ref) => TaskService(ref.watch
 final attendanceServiceProvider = Provider<AttendanceService>(
   (ref) => AttendanceService(ref.watch(apiServiceProvider)),
 );
+
+final leaveServiceProvider = Provider<LeaveService>((ref) => LeaveService(ref.watch(apiServiceProvider)));

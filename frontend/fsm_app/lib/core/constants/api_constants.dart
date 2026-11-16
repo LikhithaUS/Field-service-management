@@ -33,4 +33,5 @@ class ApiConstants {
   static const String departments = '/departments';
   static const String tasks = '/tasks';
   static const String attendance = '/attendance';
+  static const String leaves = '/leaves';
 }

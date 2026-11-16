@@ -6,7 +6,8 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 > Status: authentication (login, register, forgot/reset password, session restore), a role-aware
 > dashboard, **Employees** (list with search/filters/pagination, details, create/edit/delete),
 > **Departments** (admin CRUD), **Tasks** (assignment, status workflow, comments) and
-> **Attendance** (check-in/out, history, team report) are complete.
+> **Attendance** (check-in/out, history, team report) and **Leave** (apply, approve/reject, cancel)
+> are complete.
 
 ## Screens
 
@@ -20,6 +21,8 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 | Create / edit task | Admin, Manager |
 | Attendance (check in/out, this month's history) | Everyone |
 | Team attendance report | Admin, Manager |
+| My leave, apply for leave, leave details | Everyone |
+| Leave requests (review queue) | Admin, Manager |
 
 Role rules are enforced by the backend; the app mirrors them (router guards and hidden buttons)
 so users never see actions that would fail.
@@ -38,6 +41,12 @@ thread for back-and-forth between the manager and the employee.
 while checked in. The backend decides *late* / *half day* from the company rules it sends back
 (work start time, half-day hours), so the app never hard-codes them. Staff open *Team report* to see
 everyone's records for a day or date range, filter by person or status, and see totals.
+
+**Leave:** pick a type and a date range; the form previews the number of working days (weekends
+are skipped, matching the backend). Staff review pending requests from *Requests* and approve or
+reject with an optional note; nobody can review their own, and managers only review employees.
+Approved days appear as *Leave* in attendance. Requests can be cancelled while pending, or after
+approval if the leave hasn't started.
 
 ## Tech Stack
 
