@@ -53,6 +53,7 @@ class DashboardScreen extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final modules = _modules.where((m) => m.roles.contains(user.role)).toList();
+    final canAssignTasks = !user.isEmployee;
 
     return Scaffold(
       appBar: AppBar(
@@ -66,12 +67,21 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
+      // Shortcut so staff can assign a task straight from the dashboard.
+      floatingActionButton: canAssignTasks
+          ? FloatingActionButton.extended(
+              onPressed: () => _openAndRefresh(context, ref, AppRoutes.taskNew),
+              icon: const Icon(Icons.add_task),
+              label: const Text('Create task'),
+            )
+          : null,
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Responsive grid: 2 columns on phones, up to 4 on wide web/desktop windows.
           final columns = (constraints.maxWidth / 260).floor().clamp(2, 4);
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            // Extra bottom space so the Create task button never covers the last tiles.
+            padding: EdgeInsets.fromLTRB(20, 20, 20, canAssignTasks ? 96 : 20),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1100),

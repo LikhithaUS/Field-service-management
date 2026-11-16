@@ -343,4 +343,33 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.textContaining('(overdue)'), findsOneWidget);
   });
+
+  group('Dashboard Create task button', () {
+    testWidgets('admins and managers can open the task form from the dashboard', (tester) async {
+      for (final user in [adminUser, managerUser]) {
+        await pumpApp(tester, TestServices(signedInAs: user));
+        expect(find.widgetWithText(FloatingActionButton, 'Create task'), findsOneWidget);
+
+        await tester.tap(find.widgetWithText(FloatingActionButton, 'Create task'));
+        await tester.pumpAndSettle();
+        expect(find.text('New task'), findsOneWidget); // task form app bar
+        expect(find.byType(DashboardScreen), findsNothing);
+
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+        expect(find.byType(DashboardScreen), findsOneWidget); // back returns to the dashboard
+      }
+    });
+
+    testWidgets('employees do not get the button', (tester) async {
+      await pumpApp(tester, TestServices(signedInAs: employeeUser));
+      expect(find.widgetWithText(FloatingActionButton, 'Create task'), findsNothing);
+    });
+
+    testWidgets('fits a phone screen without overflow', (tester) async {
+      await pumpApp(tester, TestServices(signedInAs: managerUser), size: const Size(360, 740));
+      expect(tester.takeException(), isNull);
+      expect(find.text('Create task'), findsOneWidget);
+    });
+  });
 }

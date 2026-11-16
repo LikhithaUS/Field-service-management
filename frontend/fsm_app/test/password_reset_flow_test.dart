@@ -20,7 +20,7 @@ void main() {
 
   testWidgets('request a code, then reset and get signed in', (tester) async {
     when(() => services.auth.forgotPassword('asha@example.com')).thenAnswer((_) async => 'sent');
-    when(() => services.auth.resetPassword(email: 'asha@example.com', code: '123456', password: 'newpass123'))
+    when(() => services.auth.resetPassword(email: 'asha@example.com', code: '123456', password: 'NewPass@123'))
         .thenAnswer((_) async => adminUser);
 
     await openForgotPassword(tester);
@@ -34,8 +34,8 @@ void main() {
 
     final fields = find.byType(TextFormField);
     await tester.enterText(fields.at(1), '123456');
-    await tester.enterText(fields.at(2), 'newpass123');
-    await tester.enterText(fields.at(3), 'newpass123');
+    await tester.enterText(fields.at(2), 'NewPass@123');
+    await tester.enterText(fields.at(3), 'NewPass@123');
     await tester.tap(find.text('Set password & sign in'));
     await tester.pumpAndSettle();
 
@@ -58,7 +58,7 @@ void main() {
     final fields = find.byType(TextFormField);
     await tester.enterText(fields.at(0), 'asha@example.com');
     await tester.enterText(fields.at(1), '12');
-    await tester.enterText(fields.at(2), 'newpass123');
+    await tester.enterText(fields.at(2), 'NewPass@123');
     await tester.enterText(fields.at(3), 'different1');
     await tester.tap(find.text('Set password & sign in'));
     await tester.pump();
@@ -78,8 +78,8 @@ void main() {
     final fields = find.byType(TextFormField);
     await tester.enterText(fields.at(0), 'asha@example.com');
     await tester.enterText(fields.at(1), '999999');
-    await tester.enterText(fields.at(2), 'newpass123');
-    await tester.enterText(fields.at(3), 'newpass123');
+    await tester.enterText(fields.at(2), 'NewPass@123');
+    await tester.enterText(fields.at(3), 'NewPass@123');
     await tester.tap(find.text('Set password & sign in'));
     await tester.pumpAndSettle();
 

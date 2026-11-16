@@ -16,13 +16,22 @@ class Validators {
     return null;
   }
 
-  /// Same rules as the backend: at least 8 characters, one letter and one number.
+  /// Same rules as the backend. Any characters are allowed; these are the minimums.
+  static final List<PasswordRule> passwordRules = [
+    PasswordRule('at least 8 characters', (v) => v.length >= 8),
+    PasswordRule('an uppercase letter (A-Z)', (v) => RegExp(r'[A-Z]').hasMatch(v)),
+    PasswordRule('a lowercase letter (a-z)', (v) => RegExp(r'[a-z]').hasMatch(v)),
+    PasswordRule('a number (0-9)', (v) => RegExp(r'\d').hasMatch(v)),
+    PasswordRule('a special character (e.g. ! @ # \$ %)', (v) => RegExp(r'[^A-Za-z0-9]').hasMatch(v)),
+  ];
+
+  /// Lists every missing requirement at once, not just the first.
   static String? newPassword(String? value) {
     if (value == null || value.isEmpty) return 'Password is required';
-    if (value.length < 8) return 'Password must be at least 8 characters';
-    if (!RegExp(r'[A-Za-z]').hasMatch(value)) return 'Password must contain a letter';
-    if (!RegExp(r'\d').hasMatch(value)) return 'Password must contain a number';
-    return null;
+    if (value.length > 128) return 'Password must be at most 128 characters';
+    final missing = passwordRules.where((r) => !r.isMetBy(value)).map((r) => r.label).toList();
+    if (missing.isEmpty) return null;
+    return 'Password needs ${missing.join(', ')}';
   }
 
   /// Optional field; same pattern as the backend (digits, spaces, +, -, parentheses).
@@ -39,4 +48,13 @@ class Validators {
       return null;
     };
   }
+}
+
+class PasswordRule {
+  const PasswordRule(this.label, this._test);
+
+  final String label;
+  final bool Function(String) _test;
+
+  bool isMetBy(String value) => _test(value);
 }

@@ -2,7 +2,7 @@ const { app, request, lastCodeFor, outbox } = require('./helpers');
 const User = require('../src/models/User');
 
 const email = 'ravi@example.com';
-const oldPassword = 'oldpass123';
+const oldPassword = 'OldPass@123';
 
 async function registerRavi() {
   const res = await request(app).post('/api/auth/register').send({ name: 'Ravi', email, password: oldPassword });
@@ -48,14 +48,14 @@ describe('POST /api/auth/reset-password', () => {
 
     const res = await request(app)
       .post('/api/auth/reset-password')
-      .send({ email, code, password: 'newpass456' });
+      .send({ email, code, password: 'NewPass@456' });
     expect(res.status).toBe(200);
     expect(res.body.data.token).toEqual(expect.any(String));
 
     // Old password no longer works, new one does.
     const oldLogin = await request(app).post('/api/auth/login').send({ email, password: oldPassword });
     expect(oldLogin.status).toBe(401);
-    const newLogin = await request(app).post('/api/auth/login').send({ email, password: 'newpass456' });
+    const newLogin = await request(app).post('/api/auth/login').send({ email, password: 'NewPass@456' });
     expect(newLogin.status).toBe(200);
 
     // Sessions from before the reset are revoked.
@@ -68,8 +68,8 @@ describe('POST /api/auth/reset-password', () => {
     await request(app).post('/api/auth/forgot-password').send({ email });
     const code = lastCodeFor(email);
 
-    await request(app).post('/api/auth/reset-password').send({ email, code, password: 'newpass456' });
-    const again = await request(app).post('/api/auth/reset-password').send({ email, code, password: 'other789x' });
+    await request(app).post('/api/auth/reset-password').send({ email, code, password: 'NewPass@456' });
+    const again = await request(app).post('/api/auth/reset-password').send({ email, code, password: 'Other@789x' });
     expect(again.status).toBe(400);
   });
 
@@ -79,7 +79,7 @@ describe('POST /api/auth/reset-password', () => {
     const code = lastCodeFor(email);
     const wrong = code === '000000' ? '111111' : '000000';
 
-    const res = await request(app).post('/api/auth/reset-password').send({ email, code: wrong, password: 'newpass456' });
+    const res = await request(app).post('/api/auth/reset-password').send({ email, code: wrong, password: 'NewPass@456' });
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('Invalid or expired code');
   });
@@ -91,9 +91,9 @@ describe('POST /api/auth/reset-password', () => {
     const wrong = code === '000000' ? '111111' : '000000';
 
     for (let i = 0; i < 5; i += 1) {
-      await request(app).post('/api/auth/reset-password').send({ email, code: wrong, password: 'newpass456' });
+      await request(app).post('/api/auth/reset-password').send({ email, code: wrong, password: 'NewPass@456' });
     }
-    const res = await request(app).post('/api/auth/reset-password').send({ email, code, password: 'newpass456' });
+    const res = await request(app).post('/api/auth/reset-password').send({ email, code, password: 'NewPass@456' });
     expect(res.status).toBe(400);
   });
 
@@ -103,7 +103,7 @@ describe('POST /api/auth/reset-password', () => {
     const code = lastCodeFor(email);
     await User.updateOne({ email }, { resetCodeExpiresAt: new Date(Date.now() - 1000) });
 
-    const res = await request(app).post('/api/auth/reset-password').send({ email, code, password: 'newpass456' });
+    const res = await request(app).post('/api/auth/reset-password').send({ email, code, password: 'NewPass@456' });
     expect(res.status).toBe(400);
   });
 

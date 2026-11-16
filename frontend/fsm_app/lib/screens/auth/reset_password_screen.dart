@@ -130,6 +130,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.newPassword],
               ),
+              PasswordRequirements(controller: _password),
               const SizedBox(height: 16),
               PasswordField(
                 controller: _confirm,

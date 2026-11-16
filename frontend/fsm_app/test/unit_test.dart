@@ -84,7 +84,9 @@ void main() {
       expect(Validators.newPassword('short1'), contains('8 characters'));
       expect(Validators.newPassword('allletters'), contains('number'));
       expect(Validators.newPassword('12345678'), contains('letter'));
-      expect(Validators.newPassword('secret123'), isNull);
+      expect(Validators.newPassword('secret123'), allOf(contains('uppercase'), contains('special character')));
+      expect(Validators.newPassword('Secret@123'), isNull);
+      expect(Validators.newPassword('My pass#1 ünïcødé'), isNull); // spaces and unicode are fine
     });
   });
 }

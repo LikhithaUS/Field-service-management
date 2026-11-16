@@ -41,7 +41,7 @@ describe('POST /api/employees', () => {
     expect(code).toMatch(/^\d{6}$/);
     const reset = await request(app)
       .post('/api/auth/reset-password')
-      .send({ email: 'priya@example.com', code, password: 'mypass123' });
+      .send({ email: 'priya@example.com', code, password: 'MyPass@123' });
     expect(reset.status).toBe(200);
     expect(reset.body.data.user.employeeId).toBe('EMP-0001');
   });
@@ -55,7 +55,7 @@ describe('POST /api/employees', () => {
 
   it('links an existing self-registered account instead of creating a new one', async () => {
     const { auth } = await loginAs('admin');
-    await request(app).post('/api/auth/register').send({ name: 'Priya', email: 'priya@example.com', password: 'selfpass1' });
+    await request(app).post('/api/auth/register').send({ name: 'Priya', email: 'priya@example.com', password: 'SelfPass@1' });
 
     const res = await request(app).post('/api/employees').set(auth).send(newEmployee());
     expect(res.status).toBe(201);
@@ -64,7 +64,7 @@ describe('POST /api/employees', () => {
     expect(await User.countDocuments({ email: 'priya@example.com' })).toBe(1);
 
     // Their existing password still works.
-    const login = await request(app).post('/api/auth/login').send({ email: 'priya@example.com', password: 'selfpass1' });
+    const login = await request(app).post('/api/auth/login').send({ email: 'priya@example.com', password: 'SelfPass@1' });
     expect(login.status).toBe(200);
   });
 
@@ -211,13 +211,13 @@ describe('PUT /api/employees/:id', () => {
     const code = lastCodeFor('priya@example.com');
     const setup = await request(app)
       .post('/api/auth/reset-password')
-      .send({ email: 'priya@example.com', code, password: 'mypass123' });
+      .send({ email: 'priya@example.com', code, password: 'MyPass@123' });
     const priyaAuth = { Authorization: `Bearer ${setup.body.data.token}` };
 
     await request(app).put(`/api/employees/${emp.id}`).set(auth).send({ status: 'inactive' });
 
     expect((await request(app).get('/api/auth/me').set(priyaAuth)).status).toBe(401);
-    const login = await request(app).post('/api/auth/login').send({ email: 'priya@example.com', password: 'mypass123' });
+    const login = await request(app).post('/api/auth/login').send({ email: 'priya@example.com', password: 'MyPass@123' });
     expect(login.status).toBe(403);
   });
 

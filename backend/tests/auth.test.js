@@ -9,7 +9,7 @@ const { ROLES } = require('../src/utils/roles');
 
 const app = createApp();
 
-const validUser = { name: 'Asha Rao', email: 'Asha@Example.com', password: 'secret123' };
+const validUser = { name: 'Asha Rao', email: 'Asha@Example.com', password: 'Secret@123' };
 
 async function registerAndLogin(user = validUser) {
   const res = await request(app).post('/api/auth/register').send(user);
@@ -180,5 +180,25 @@ describe('Unknown routes', () => {
     const res = await request(app).get('/api/does-not-exist');
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
+  });
+});
+
+describe('Password rules', () => {
+  const register = (password) =>
+    request(app).post('/api/auth/register').send({ name: 'Pat', email: 'pat@example.com', password });
+  const messageFor = async (password) => (await register(password)).body.details?.find((d) => d.field === 'password')?.message;
+
+  it.each([
+    ['Ab@1', '8-128 characters'],
+    ['lower@123', 'uppercase'],
+    ['UPPER@123', 'lowercase'],
+    ['NoDigits@here', 'number'],
+    ['NoSymbol123', 'special character'],
+  ])('rejects %s (%s)', async (password, expected) => {
+    expect(await messageFor(password)).toContain(expected);
+  });
+
+  it('accepts any special characters, including spaces and unicode', async () => {
+    expect((await register('My pass#1 ünïcødé')).status).toBe(201);
   });
 });

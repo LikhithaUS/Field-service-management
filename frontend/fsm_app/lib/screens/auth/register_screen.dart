@@ -100,6 +100,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.newPassword],
               ),
+              PasswordRequirements(controller: _password),
               const SizedBox(height: 16),
               PasswordField(
                 controller: _confirm,
