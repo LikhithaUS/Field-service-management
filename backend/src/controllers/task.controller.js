@@ -5,6 +5,7 @@ const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const { ROLES } = require('../utils/roles');
 const { parsePagination, paginationMeta, escapeRegex } = require('../utils/query');
+const { notify } = require('../services/notification.service');
 
 const { OPEN_STATUSES } = Task;
 
@@ -120,6 +121,15 @@ async function create(req, res) {
     dueDate: dueDate || null,
   });
 
+  await notify([task.assignedTo], {
+    actor: req.user,
+    title: 'New task assigned',
+    message: `${req.user.name} assigned you ${task.taskNumber}: ${task.title}`,
+    type: 'task_assigned',
+    entityType: 'task',
+    entityId: task._id,
+  });
+
   await task.populate(PEOPLE);
   res.status(201).json({ success: true, data: { task: { ...task.toJSON(), commentCount: 0 } } });
 }
@@ -149,12 +159,37 @@ async function update(req, res) {
     await assertAssignable(updates.assignedTo);
   }
 
+  const previous = { assignedTo: task.assignedTo, status: task.status };
   task.set(updates);
   await task.save();
+  await notifyTaskChanges(task, previous, req.user);
 
   await task.populate(PEOPLE);
   const commentCount = await Comment.countDocuments({ task: task._id });
   res.json({ success: true, data: { task: { ...task.toJSON(), commentCount } } });
+}
+
+const truncate = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+// Tell the new assignee about a reassignment, and the creator when the work is done.
+async function notifyTaskChanges(task, previous, actor) {
+  const link = { actor, entityType: 'task', entityId: task._id };
+  if (!task.assignedTo.equals(previous.assignedTo)) {
+    await notify([task.assignedTo], {
+      ...link,
+      title: 'Task assigned to you',
+      message: `${actor.name} reassigned ${task.taskNumber}: ${task.title} to you`,
+      type: 'task_assigned',
+    });
+  }
+  if (task.status === 'completed' && previous.status !== 'completed') {
+    await notify([task.assignedBy], {
+      ...link,
+      title: 'Task completed',
+      message: `${actor.name} completed ${task.taskNumber}: ${task.title}`,
+      type: 'task_completed',
+    });
+  }
 }
 
 // DELETE /api/tasks/:id  (admin, manager) - also removes the task's comments.
@@ -176,6 +211,15 @@ async function listComments(req, res) {
 async function addComment(req, res) {
   const task = await findVisibleTask(req);
   const comment = await Comment.create({ task: task._id, user: req.user._id, message: req.body.message });
+  // Both sides of the conversation hear about it (the commenter is skipped by notify).
+  await notify([task.assignedTo, task.assignedBy], {
+    actor: req.user,
+    title: `New comment on ${task.taskNumber}`,
+    message: `${req.user.name}: ${truncate(comment.message, 120)}`,
+    type: 'task_comment',
+    entityType: 'task',
+    entityId: task._id,
+  });
   await comment.populate('user', PERSON_FIELDS);
   res.status(201).json({ success: true, data: { comment } });
 }

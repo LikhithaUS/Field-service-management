@@ -6,8 +6,8 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 > Status: authentication (login, register, forgot/reset password, session restore), a role-aware
 > dashboard, **Employees** (list with search/filters/pagination, details, create/edit/delete),
 > **Departments** (admin CRUD), **Tasks** (assignment, status workflow, comments) and
-> **Attendance** (check-in/out, history, team report) and **Leave** (apply, approve/reject, cancel)
-> are complete.
+> **Attendance** (check-in/out, history, team report), **Leave** (apply, approve/reject, cancel) and
+> **Notifications** (bell with unread badge, inbox) are complete.
 
 ## Screens
 
@@ -23,6 +23,7 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 | Team attendance report | Admin, Manager |
 | My leave, apply for leave, leave details | Everyone |
 | Leave requests (review queue) | Admin, Manager |
+| Notifications | Everyone |
 
 Role rules are enforced by the backend; the app mirrors them (router guards and hidden buttons)
 so users never see actions that would fail.
@@ -47,6 +48,11 @@ are skipped, matching the backend). Staff review pending requests from *Requests
 reject with an optional note; nobody can review their own, and managers only review employees.
 Approved days appear as *Leave* in attendance. Requests can be cancelled while pending, or after
 approval if the leave hasn't started.
+
+**Notifications:** the dashboard's bell shows the unread count. The backend creates notifications
+for task assignments, comments, completions and leave requests/decisions. Tapping one marks it read
+and opens the task or leave request it refers to. The count refreshes whenever you come back to the
+dashboard (no live push yet).
 
 ## Tech Stack
 

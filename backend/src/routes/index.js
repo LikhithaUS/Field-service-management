@@ -5,6 +5,7 @@ const employeeRoutes = require('./employee.routes');
 const taskRoutes = require('./task.routes');
 const attendanceRoutes = require('./attendance.routes');
 const leaveRoutes = require('./leave.routes');
+const notificationRoutes = require('./notification.routes');
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.use('/employees', employeeRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use('/leaves', leaveRoutes);
-// Upcoming modules: notifications, dashboard
+router.use('/notifications', notificationRoutes);
+// Upcoming modules: announcements, dashboard
 
 module.exports = router;

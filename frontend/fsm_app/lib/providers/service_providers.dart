@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/department_service.dart';
 import '../services/employee_service.dart';
 import '../services/leave_service.dart';
+import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import '../services/task_service.dart';
 
@@ -37,3 +38,7 @@ final attendanceServiceProvider = Provider<AttendanceService>(
 );
 
 final leaveServiceProvider = Provider<LeaveService>((ref) => LeaveService(ref.watch(apiServiceProvider)));
+
+final notificationServiceProvider = Provider<NotificationService>(
+  (ref) => NotificationService(ref.watch(apiServiceProvider)),
+);

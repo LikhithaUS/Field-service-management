@@ -4,7 +4,7 @@ REST API for **ServiceHub**, an Employee & Field Service Management Platform.
 Built with Node.js, Express 5, MongoDB (Mongoose), JWT authentication and role-based access control.
 
 > Status: authentication (incl. forgot/reset password), **employees**, **departments**, **tasks**
-> (with comments), **attendance** and **leave management** are complete. Notifications and dashboard modules are coming next.
+> (with comments), **attendance**, **leave management** and **notifications** are complete. Announcements and dashboard modules are coming next.
 
 ## Tech Stack
 
@@ -180,6 +180,31 @@ List responses: `{ items: [...], pagination: { page, limit, total, totalPages } 
 - Approving writes `leave` attendance records for each working day, skipping days the person
   actually checked in. Cancelling approved leave removes them again.
 - The requester is emailed when a request is approved or rejected (console transport for now).
+
+### Notifications
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/notifications` | Authenticated | Own notifications, newest first: `?unread=true&page=&limit=`, plus `unreadCount` |
+| GET | `/api/notifications/unread-count` | Authenticated | `{ unreadCount }` for the bell badge |
+| PUT | `/api/notifications/:id/read` | Owner | Mark one as read (someone else's → 404) |
+| PUT | `/api/notifications/read-all` | Authenticated | Mark all of mine as read |
+
+Each notification has `title`, `message`, `type`, `isRead` and an optional link
+(`entityType`: `task` \| `leave`, `entityId`) so the app can open what it refers to.
+
+**Created automatically by other modules** (via `services/notification.service.js`):
+
+| Event | Who is notified |
+|---|---|
+| Task created / reassigned | The (new) assignee |
+| Task completed | Whoever assigned it |
+| Task comment | Assignee and assigner, except the commenter |
+| Leave requested | Active reviewers: admins, plus managers for employees' requests |
+| Leave approved / rejected | The requester |
+
+Nobody is notified about their own action. A failed notification is logged but never fails the
+action that triggered it. Notifications are fetched by the app (no live push yet).
 
 ## Password Reset & Account Setup
 

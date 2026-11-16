@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_providers.dart';
 import '../../routes/app_router.dart';
 
 /// Home screen. Each tile is a module from the plan; tiles with a route are live,
@@ -20,7 +21,8 @@ class DashboardScreen extends ConsumerWidget {
         route: AppRoutes.attendance),
     _Module('Leave', Icons.beach_access_outlined, {UserRole.admin, UserRole.manager, UserRole.employee},
         route: AppRoutes.leave),
-    _Module('Notifications', Icons.notifications_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
+    _Module('Notifications', Icons.notifications_outlined, {UserRole.admin, UserRole.manager, UserRole.employee},
+        route: AppRoutes.notifications),
     _Module('Announcements', Icons.campaign_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
     _Module('Reports', Icons.insights_outlined, {UserRole.admin, UserRole.manager}),
   ];
@@ -53,6 +55,7 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('ServiceHub'),
         actions: [
+          const _NotificationBell(),
           IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
@@ -121,18 +124,43 @@ class _Module {
   final String? route; // null = not built yet
 }
 
-class _ModuleCard extends StatelessWidget {
+/// Opens a screen and refreshes the bell's unread count on the way back, since tasks
+/// and leave actions on other screens may have created or read notifications.
+Future<void> _openAndRefresh(BuildContext context, WidgetRef ref, String route) async {
+  await context.push(route);
+  ref.invalidate(unreadCountProvider);
+}
+
+class _NotificationBell extends ConsumerWidget {
+  const _NotificationBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(unreadCountProvider).value ?? 0;
+    return IconButton(
+      tooltip: count == 0 ? 'Notifications' : 'Notifications ($count unread)',
+      onPressed: () => _openAndRefresh(context, ref, AppRoutes.notifications),
+      icon: Badge(
+        isLabelVisible: count > 0,
+        label: Text(count > 99 ? '99+' : '$count'),
+        child: const Icon(Icons.notifications_outlined),
+      ),
+    );
+  }
+}
+
+class _ModuleCard extends ConsumerWidget {
   const _ModuleCard({required this.module});
   final _Module module;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final live = module.route != null;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: live ? () => context.push(module.route!) : null,
+        onTap: live ? () => _openAndRefresh(context, ref, module.route!) : null,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

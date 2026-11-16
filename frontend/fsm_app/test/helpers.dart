@@ -22,6 +22,7 @@ import 'package:fsm_app/services/auth_service.dart';
 import 'package:fsm_app/services/department_service.dart';
 import 'package:fsm_app/services/employee_service.dart';
 import 'package:fsm_app/services/leave_service.dart';
+import 'package:fsm_app/services/notification_service.dart';
 import 'package:fsm_app/services/task_service.dart';
 
 class MockAuthService extends Mock implements AuthService {}
@@ -37,6 +38,8 @@ class MockTaskService extends Mock implements TaskService {}
 class MockAttendanceService extends Mock implements AttendanceService {}
 
 class MockLeaveService extends Mock implements LeaveService {}
+
+class MockNotificationService extends Mock implements NotificationService {}
 
 const adminUser = User(id: 'u1', name: 'Root Admin', email: 'root@example.com', role: UserRole.admin, employeeId: 'EMP-0001');
 const managerUser = User(id: 'u2', name: 'Maya Manager', email: 'maya@example.com', role: UserRole.manager);
@@ -117,10 +120,12 @@ class TestServices {
   final tasks = MockTaskService();
   final attendance = MockAttendanceService();
   final leaves = MockLeaveService();
+  final notifications = MockNotificationService();
 
   TestServices({User? signedInAs}) {
     when(() => auth.currentUser()).thenAnswer((_) async => signedInAs);
     when(() => departments.list()).thenAnswer((_) async => [itDept, hrDept]);
+    when(() => notifications.unreadCount()).thenAnswer((_) async => 0); // dashboard bell
   }
 }
 
@@ -150,6 +155,7 @@ Future<void> pumpApp(WidgetTester tester, TestServices services, {Size size = co
       taskServiceProvider.overrideWithValue(services.tasks),
       attendanceServiceProvider.overrideWithValue(services.attendance),
       leaveServiceProvider.overrideWithValue(services.leaves),
+      notificationServiceProvider.overrideWithValue(services.notifications),
     ],
     child: const ServiceHubApp(),
   ));

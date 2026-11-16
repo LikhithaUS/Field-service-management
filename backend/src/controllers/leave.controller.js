@@ -8,6 +8,7 @@ const { parsePagination, paginationMeta } = require('../utils/query');
 const { clock, workDate } = require('../utils/time');
 const { sendEmail } = require('../services/email.service');
 const { leaveDecisionEmail } = require('../services/email.templates');
+const { notify, leaveReviewers } = require('../services/notification.service');
 
 const { ACTIVE_STATUSES } = Leave;
 const PERSON_FIELDS = 'name email role employeeId';
@@ -22,6 +23,7 @@ const ownerId = (leave) => leave.user._id || leave.user; // populated or not
 const isOwner = (leave, user) => ownerId(leave).equals(user._id);
 const toDate = (yyyyMmDd) => new Date(`${yyyyMmDd}T00:00:00.000Z`);
 const today = () => workDate(clock.now(), config.attendance.timeZone);
+const dayLabel = (date) => date.toISOString().slice(0, 10);
 
 /** Every Mon-Fri date in [start, end], as midnight UTC. Weekends don't count as leave. */
 function workingDays(start, end) {
@@ -123,6 +125,14 @@ async function apply(req, res) {
   if (overlapping) throw ApiError.conflict('You already have a leave request for some of these dates');
 
   const leave = await Leave.create({ user: req.user._id, leaveType, startDate, endDate, days, reason });
+  await notify(await leaveReviewers(req.user), {
+    actor: req.user,
+    title: 'New leave request',
+    message: `${req.user.name} requested ${days} day${days === 1 ? '' : 's'} of ${leaveType} leave from ${dayLabel(startDate)}`,
+    type: 'leave_requested',
+    entityType: 'leave',
+    entityId: leave._id,
+  });
   await leave.populate(PEOPLE);
   res.status(201).json({ success: true, data: { leave } });
 }
@@ -140,6 +150,14 @@ async function review(req, res, status) {
   await leave.populate(PEOPLE);
   const owner = await User.findById(ownerId(leave));
   if (owner) await sendEmail(leaveDecisionEmail(owner, leave, req.user));
+  await notify([ownerId(leave)], {
+    actor: req.user,
+    title: `Leave ${status}`,
+    message: `${req.user.name} ${status} your leave from ${dayLabel(leave.startDate)}${leave.reviewNote ? `: "${leave.reviewNote}"` : ''}`,
+    type: 'leave_decision',
+    entityType: 'leave',
+    entityId: leave._id,
+  });
 
   res.json({ success: true, data: { leave } });
 }

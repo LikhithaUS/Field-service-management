@@ -20,6 +20,7 @@ import '../screens/leave/apply_leave_screen.dart';
 import '../screens/leave/leave_details_screen.dart';
 import '../screens/leave/leave_requests_screen.dart';
 import '../screens/leave/leave_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
 import '../screens/tasks/task_details_screen.dart';
 import '../screens/tasks/task_form_screen.dart';
 import '../screens/tasks/task_list_screen.dart';
@@ -43,6 +44,7 @@ class AppRoutes {
   static const leave = '/leave';
   static const leaveApply = '/leave/apply';
   static const leaveRequests = '/leave/requests';
+  static const notifications = '/notifications';
 
   static String employeeDetail(String id) => '/employees/$id';
   static String employeeEdit(String id) => '/employees/$id/edit';
@@ -146,6 +148,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AttendanceScreen(),
         routes: [GoRoute(path: 'report', builder: (context, state) => const AttendanceReportScreen())],
       ),
+      GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
       GoRoute(
         path: AppRoutes.leave,
         builder: (context, state) => const LeaveScreen(),
