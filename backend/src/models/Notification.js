@@ -6,10 +6,11 @@ const NOTIFICATION_TYPES = Object.freeze([
   'task_comment',
   'leave_requested',
   'leave_decision',
+  'announcement',
   'general',
 ]);
 // What a notification points at, so the app can open it when tapped.
-const ENTITY_TYPES = Object.freeze(['task', 'leave']);
+const ENTITY_TYPES = Object.freeze(['task', 'leave', 'announcement']);
 
 // An in-app message for one user. Created by other modules through notification.service.js.
 const notificationSchema = new mongoose.Schema(

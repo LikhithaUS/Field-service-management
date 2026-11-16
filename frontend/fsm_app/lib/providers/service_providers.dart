@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/announcement_service.dart';
 import '../services/api_service.dart';
 import '../services/attendance_service.dart';
 import '../services/auth_service.dart';
@@ -41,4 +42,8 @@ final leaveServiceProvider = Provider<LeaveService>((ref) => LeaveService(ref.wa
 
 final notificationServiceProvider = Provider<NotificationService>(
   (ref) => NotificationService(ref.watch(apiServiceProvider)),
+);
+
+final announcementServiceProvider = Provider<AnnouncementService>(
+  (ref) => AnnouncementService(ref.watch(apiServiceProvider)),
 );

@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
+import '../screens/announcements/announcement_details_screen.dart';
+import '../screens/announcements/announcement_form_screen.dart';
+import '../screens/announcements/announcement_list_screen.dart';
 import '../screens/attendance/attendance_report_screen.dart';
 import '../screens/attendance/attendance_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
@@ -45,12 +48,16 @@ class AppRoutes {
   static const leaveApply = '/leave/apply';
   static const leaveRequests = '/leave/requests';
   static const notifications = '/notifications';
+  static const announcements = '/announcements';
+  static const announcementNew = '/announcements/new';
 
   static String employeeDetail(String id) => '/employees/$id';
   static String employeeEdit(String id) => '/employees/$id/edit';
   static String taskDetail(String id) => '/tasks/$id';
   static String taskEdit(String id) => '/tasks/$id/edit';
   static String leaveDetail(String id) => '/leave/$id';
+  static String announcementDetail(String id) => '/announcements/$id';
+  static String announcementEdit(String id) => '/announcements/$id/edit';
   static String resetPasswordFor(String email) =>
       Uri(path: resetPassword, queryParameters: email.isEmpty ? null : {'email': email}).toString();
 
@@ -69,6 +76,8 @@ class AppRoutes {
   static final _patternGuards = <RegExp, Set<UserRole>>{
     RegExp(r'^/attendance/report$'): {UserRole.admin, UserRole.manager},
     RegExp(r'^/leave/requests$'): {UserRole.admin, UserRole.manager},
+    RegExp(r'^/announcements/new$'): {UserRole.admin, UserRole.manager},
+    RegExp(r'^/announcements/[^/]+/edit$'): {UserRole.admin, UserRole.manager},
     RegExp(r'^/tasks/new$'): {UserRole.admin, UserRole.manager},
     RegExp(r'^/tasks/[^/]+/edit$'): {UserRole.admin, UserRole.manager},
   };
@@ -149,6 +158,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [GoRoute(path: 'report', builder: (context, state) => const AttendanceReportScreen())],
       ),
       GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
+      GoRoute(
+        path: AppRoutes.announcements,
+        builder: (context, state) => const AnnouncementListScreen(),
+        routes: [
+          GoRoute(path: 'new', builder: (context, state) => const AnnouncementFormScreen()),
+          GoRoute(
+            path: ':id',
+            builder: (context, state) => AnnouncementDetailsScreen(announcementId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => AnnouncementFormScreen(announcementId: state.pathParameters['id']),
+              ),
+            ],
+          ),
+        ],
+      ),
       GoRoute(
         path: AppRoutes.leave,
         builder: (context, state) => const LeaveScreen(),

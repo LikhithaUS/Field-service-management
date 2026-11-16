@@ -7,7 +7,7 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 > dashboard, **Employees** (list with search/filters/pagination, details, create/edit/delete),
 > **Departments** (admin CRUD), **Tasks** (assignment, status workflow, comments) and
 > **Attendance** (check-in/out, history, team report), **Leave** (apply, approve/reject, cancel) and
-> **Notifications** (bell with unread badge, inbox) are complete.
+> **Notifications** (bell with unread badge, inbox) and **Announcements** are complete.
 
 ## Screens
 
@@ -24,6 +24,8 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 | My leave, apply for leave, leave details | Everyone |
 | Leave requests (review queue) | Admin, Manager |
 | Notifications | Everyone |
+| Announcements list / details | Everyone |
+| Post / edit announcement | Admin, Manager (managers only their own) |
 
 Role rules are enforced by the backend; the app mirrors them (router guards and hidden buttons)
 so users never see actions that would fail.
@@ -53,6 +55,10 @@ approval if the leave hasn't started.
 for task assignments, comments, completions and leave requests/decisions. Tapping one marks it read
 and opens the task or leave request it refers to. The count refreshes whenever you come back to the
 dashboard (no live push yet).
+
+**Announcements:** staff post notices with a category (General, Holiday, Maintenance, Meeting,
+Important) and can pin them to the top. Posting notifies everyone. The top announcement is
+shown on the dashboard; the full list has search and category chips.
 
 ## Tech Stack
 

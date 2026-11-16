@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:fsm_app/app.dart';
+import 'package:fsm_app/models/announcement.dart';
 import 'package:fsm_app/models/attendance.dart';
 import 'package:fsm_app/models/attendance_query.dart';
 import 'package:fsm_app/models/department.dart';
@@ -16,6 +17,7 @@ import 'package:fsm_app/models/task.dart';
 import 'package:fsm_app/models/task_query.dart';
 import 'package:fsm_app/models/user.dart';
 import 'package:fsm_app/providers/service_providers.dart';
+import 'package:fsm_app/services/announcement_service.dart';
 import 'package:fsm_app/services/api_service.dart';
 import 'package:fsm_app/services/attendance_service.dart';
 import 'package:fsm_app/services/auth_service.dart';
@@ -40,6 +42,8 @@ class MockAttendanceService extends Mock implements AttendanceService {}
 class MockLeaveService extends Mock implements LeaveService {}
 
 class MockNotificationService extends Mock implements NotificationService {}
+
+class MockAnnouncementService extends Mock implements AnnouncementService {}
 
 const adminUser = User(id: 'u1', name: 'Root Admin', email: 'root@example.com', role: UserRole.admin, employeeId: 'EMP-0001');
 const managerUser = User(id: 'u2', name: 'Maya Manager', email: 'maya@example.com', role: UserRole.manager);
@@ -121,13 +125,43 @@ class TestServices {
   final attendance = MockAttendanceService();
   final leaves = MockLeaveService();
   final notifications = MockNotificationService();
+  final announcements = MockAnnouncementService();
 
   TestServices({User? signedInAs}) {
     when(() => auth.currentUser()).thenAnswer((_) async => signedInAs);
     when(() => departments.list()).thenAnswer((_) async => [itDept, hrDept]);
     when(() => notifications.unreadCount()).thenAnswer((_) async => 0); // dashboard bell
+    stubAnnouncements(this, []); // dashboard "latest announcement" card
   }
 }
+
+/// Every announcement list call (any filter/page) returns [items].
+void stubAnnouncements(TestServices s, List<Announcement> items) {
+  when(() => s.announcements.list(
+        category: any(named: 'category'),
+        search: any(named: 'search'),
+        page: any(named: 'page'),
+        limit: any(named: 'limit'),
+      )).thenAnswer((_) async => pageOf(items));
+}
+
+Announcement makeAnnouncement(
+  String id, {
+  String title = 'Office closed Friday',
+  User author = managerUser,
+  AnnouncementCategory category = AnnouncementCategory.holiday,
+  bool pinned = false,
+}) =>
+    Announcement(
+      id: id,
+      title: title,
+      message: 'Happy Diwali! The office is closed on Friday.',
+      category: category,
+      pinned: pinned,
+      author: personFrom(author),
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+      updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+    );
 
 void registerTestFallbacks() {
   registerFallbackValue(const EmployeeQuery());
@@ -136,6 +170,7 @@ void registerTestFallbacks() {
   registerFallbackValue(AttendanceQuery.today());
   registerFallbackValue(const LeaveQuery());
   registerFallbackValue(LeaveType.casual);
+  registerFallbackValue(AnnouncementCategory.general);
   registerFallbackValue(DateTime(2026));
   registerFallbackValue(<String, dynamic>{});
 }
@@ -156,6 +191,7 @@ Future<void> pumpApp(WidgetTester tester, TestServices services, {Size size = co
       attendanceServiceProvider.overrideWithValue(services.attendance),
       leaveServiceProvider.overrideWithValue(services.leaves),
       notificationServiceProvider.overrideWithValue(services.notifications),
+      announcementServiceProvider.overrideWithValue(services.announcements),
     ],
     child: const ServiceHubApp(),
   ));

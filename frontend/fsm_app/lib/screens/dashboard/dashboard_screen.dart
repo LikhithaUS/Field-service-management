@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/user.dart';
+import '../../providers/announcement_providers.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_providers.dart';
 import '../../routes/app_router.dart';
+import '../announcements/announcement_list_screen.dart';
 
 /// Home screen. Each tile is a module from the plan; tiles with a route are live,
 /// the rest light up as modules are built. Tiles differ by role.
@@ -23,7 +25,8 @@ class DashboardScreen extends ConsumerWidget {
         route: AppRoutes.leave),
     _Module('Notifications', Icons.notifications_outlined, {UserRole.admin, UserRole.manager, UserRole.employee},
         route: AppRoutes.notifications),
-    _Module('Announcements', Icons.campaign_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
+    _Module('Announcements', Icons.campaign_outlined, {UserRole.admin, UserRole.manager, UserRole.employee},
+        route: AppRoutes.announcements),
     _Module('Reports', Icons.insights_outlined, {UserRole.admin, UserRole.manager}),
   ];
 
@@ -92,6 +95,7 @@ class DashboardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 24),
+                    const _LatestAnnouncement(),
                     GridView(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -129,6 +133,36 @@ class _Module {
 Future<void> _openAndRefresh(BuildContext context, WidgetRef ref, String route) async {
   await context.push(route);
   ref.invalidate(unreadCountProvider);
+  ref.invalidate(latestAnnouncementProvider);
+}
+
+/// The top announcement (pinned first, then newest). Hidden when there are none or it fails to load.
+class _LatestAnnouncement extends ConsumerWidget {
+  const _LatestAnnouncement();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final latest = ref.watch(latestAnnouncementProvider).value;
+    if (latest == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text('Latest announcement', style: Theme.of(context).textTheme.titleMedium)),
+              TextButton(
+                onPressed: () => _openAndRefresh(context, ref, AppRoutes.announcements),
+                child: const Text('See all'),
+              ),
+            ],
+          ),
+          AnnouncementCard(announcement: latest, compact: true),
+        ],
+      ),
+    );
+  }
 }
 
 class _NotificationBell extends ConsumerWidget {

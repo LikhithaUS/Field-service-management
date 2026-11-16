@@ -19,6 +19,7 @@ String? notificationRoute(AppNotification n) {
   return switch (n.entityType) {
     'task' => AppRoutes.taskDetail(id),
     'leave' => AppRoutes.leaveDetail(id),
+    'announcement' => AppRoutes.announcementDetail(id),
     _ => null,
   };
 }
@@ -126,7 +127,7 @@ class _List extends ConsumerWidget {
       return EmptyView(
         icon: Icons.notifications_none,
         title: unreadOnly ? "You're all caught up" : 'No notifications yet',
-        message: unreadOnly ? null : 'Task assignments, comments and leave updates will appear here.',
+        message: unreadOnly ? null : 'Task assignments, comments, leave updates and announcements will appear here.',
       );
     }
 
@@ -163,6 +164,7 @@ class _NotificationTile extends StatelessWidget {
         NotificationType.taskComment => Icons.chat_bubble_outline,
         NotificationType.leaveRequested => Icons.event_note_outlined,
         NotificationType.leaveDecision => Icons.beach_access_outlined,
+        NotificationType.announcement => Icons.campaign_outlined,
         NotificationType.general => Icons.notifications_none,
       };
 

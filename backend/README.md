@@ -4,7 +4,7 @@ REST API for **ServiceHub**, an Employee & Field Service Management Platform.
 Built with Node.js, Express 5, MongoDB (Mongoose), JWT authentication and role-based access control.
 
 > Status: authentication (incl. forgot/reset password), **employees**, **departments**, **tasks**
-> (with comments), **attendance**, **leave management** and **notifications** are complete. Announcements and dashboard modules are coming next.
+> (with comments), **attendance**, **leave management**, **notifications** and **announcements** are complete. The dashboard module is coming next.
 
 ## Tech Stack
 
@@ -191,7 +191,7 @@ List responses: `{ items: [...], pagination: { page, limit, total, totalPages } 
 | PUT | `/api/notifications/read-all` | Authenticated | Mark all of mine as read |
 
 Each notification has `title`, `message`, `type`, `isRead` and an optional link
-(`entityType`: `task` \| `leave`, `entityId`) so the app can open what it refers to.
+(`entityType`: `task`, `leave` or `announcement`, plus `entityId`) so the app can open what it refers to.
 
 **Created automatically by other modules** (via `services/notification.service.js`):
 
@@ -202,9 +202,22 @@ Each notification has `title`, `message`, `type`, `isRead` and an optional link
 | Task comment | Assignee and assigner, except the commenter |
 | Leave requested | Active reviewers: admins, plus managers for employees' requests |
 | Leave approved / rejected | The requester |
+| Announcement posted | Every active user |
 
 Nobody is notified about their own action. A failed notification is logged but never fails the
 action that triggered it. Notifications are fetched by the app (no live push yet).
+
+### Announcements
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/announcements` | Authenticated | Pinned first, then newest: `?category=&search=&page=&limit=` |
+| GET | `/api/announcements/:id` | Authenticated | One announcement (author populated) |
+| POST | `/api/announcements` | Admin, Manager | `{ title, message, category?, pinned? }`; notifies every active user |
+| PUT | `/api/announcements/:id` | Admin, or the manager who posted it | Edit (does not re-notify) |
+| DELETE | `/api/announcements/:id` | Admin, or the manager who posted it | Also deletes its notifications |
+
+Categories: `general`, `holiday`, `maintenance`, `meeting`, `important`.
 
 ## Password Reset & Account Setup
 

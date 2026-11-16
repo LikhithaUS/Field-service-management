@@ -2,6 +2,10 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { ROLES } = require('../utils/roles');
 
+// Keep within the Notification schema limits so long titles (e.g. from announcements)
+// are shortened instead of failing validation.
+const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
 /**
  * Creates the same notification for each recipient.
  *
@@ -16,7 +20,7 @@ async function notify(recipients, { actor, title, message = '', type = 'general'
     const actorId = actor ? String(actor._id || actor) : null;
     const ids = [...new Set(recipients.filter(Boolean).map((r) => String(r._id || r)))].filter((id) => id !== actorId);
     if (!ids.length) return [];
-    return await Notification.insertMany(ids.map((user) => ({ user, title, message, type, entityType, entityId })));
+    return await Notification.insertMany(ids.map((user) => ({ user, title: clip(title, 120), message: clip(message, 500), type, entityType, entityId })));
   } catch (err) {
     console.error('Failed to create notifications:', err);
     return [];

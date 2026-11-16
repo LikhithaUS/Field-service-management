@@ -6,6 +6,7 @@ enum NotificationType {
   taskComment('task_comment'),
   leaveRequested('leave_requested'),
   leaveDecision('leave_decision'),
+  announcement('announcement'),
   general('general');
 
   const NotificationType(this.apiValue);
