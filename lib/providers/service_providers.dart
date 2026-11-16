@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/department_service.dart';
 import '../services/employee_service.dart';
 import '../services/storage_service.dart';
+import '../services/task_service.dart';
 
 /// Dependency injection: services are exposed as providers so they can be
 /// swapped for fakes in tests via `ProviderScope(overrides: [...])`.
@@ -26,3 +27,5 @@ final employeeServiceProvider = Provider<EmployeeService>((ref) => EmployeeServi
 final departmentServiceProvider = Provider<DepartmentService>(
   (ref) => DepartmentService(ref.watch(apiServiceProvider)),
 );
+
+final taskServiceProvider = Provider<TaskService>((ref) => TaskService(ref.watch(apiServiceProvider)));

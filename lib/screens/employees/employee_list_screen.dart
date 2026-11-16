@@ -12,6 +12,7 @@ import '../../providers/department_providers.dart';
 import '../../providers/employee_providers.dart';
 import '../../routes/app_router.dart';
 import '../../widgets/badges.dart';
+import '../../widgets/pagination_bar.dart';
 import '../../widgets/state_views.dart';
 
 class EmployeeListScreen extends ConsumerStatefulWidget {
@@ -208,7 +209,9 @@ class _EmployeeList extends ConsumerWidget {
         itemCount: page.items.length + 1,
         separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
-          if (index == page.items.length) return _PaginationBar(page: page);
+          if (index == page.items.length) {
+            return PaginationBar(page: page, onPageChanged: ref.read(employeeQueryProvider.notifier).setPage);
+          }
           return _EmployeeTile(employee: page.items[index]);
         },
       ),
@@ -244,41 +247,6 @@ class _EmployeeTile extends StatelessWidget {
           children: [RoleBadge(role: employee.role), StatusBadge(status: employee.status)],
         ),
         onTap: () => context.push(AppRoutes.employeeDetail(employee.id)),
-      ),
-    );
-  }
-}
-
-class _PaginationBar extends ConsumerWidget {
-  const _PaginationBar({required this.page});
-
-  final Paginated<Employee> page;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(employeeQueryProvider.notifier);
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'Showing ${page.from}–${page.to} of ${page.total}',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Previous page',
-            onPressed: page.hasPrevious ? () => notifier.setPage(page.page - 1) : null,
-            icon: const Icon(Icons.chevron_left),
-          ),
-          Text('${page.page} / ${page.totalPages}'),
-          IconButton(
-            tooltip: 'Next page',
-            onPressed: page.hasNext ? () => notifier.setPage(page.page + 1) : null,
-            icon: const Icon(Icons.chevron_right),
-          ),
-        ],
       ),
     );
   }

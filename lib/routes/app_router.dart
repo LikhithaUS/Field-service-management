@@ -14,6 +14,9 @@ import '../screens/departments/departments_screen.dart';
 import '../screens/employees/employee_details_screen.dart';
 import '../screens/employees/employee_form_screen.dart';
 import '../screens/employees/employee_list_screen.dart';
+import '../screens/tasks/task_details_screen.dart';
+import '../screens/tasks/task_form_screen.dart';
+import '../screens/tasks/task_list_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -27,9 +30,13 @@ class AppRoutes {
   static const employees = '/employees';
   static const employeeNew = '/employees/new';
   static const departments = '/departments';
+  static const tasks = '/tasks';
+  static const taskNew = '/tasks/new';
 
   static String employeeDetail(String id) => '/employees/$id';
   static String employeeEdit(String id) => '/employees/$id/edit';
+  static String taskDetail(String id) => '/tasks/$id';
+  static String taskEdit(String id) => '/tasks/$id/edit';
   static String resetPasswordFor(String email) =>
       Uri(path: resetPassword, queryParameters: email.isEmpty ? null : {'email': email}).toString();
 
@@ -43,7 +50,17 @@ class AppRoutes {
     departments: {UserRole.admin},
   };
 
+  /// Exact screens inside an otherwise open section. `/tasks` is for everyone,
+  /// but only staff create or edit tasks.
+  static final _patternGuards = <RegExp, Set<UserRole>>{
+    RegExp(r'^/tasks/new$'): {UserRole.admin, UserRole.manager},
+    RegExp(r'^/tasks/[^/]+/edit$'): {UserRole.admin, UserRole.manager},
+  };
+
   static bool canAccess(User user, String location) {
+    for (final entry in _patternGuards.entries) {
+      if (entry.key.hasMatch(location)) return entry.value.contains(user.role);
+    }
     for (final entry in _roleGuards.entries) {
       if (location == entry.key || location.startsWith('${entry.key}/')) {
         return entry.value.contains(user.role);
@@ -110,6 +127,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: AppRoutes.departments, builder: (context, state) => const DepartmentsScreen()),
+      GoRoute(
+        path: AppRoutes.tasks,
+        builder: (context, state) => const TaskListScreen(),
+        routes: [
+          GoRoute(path: 'new', builder: (context, state) => const TaskFormScreen()),
+          GoRoute(
+            path: ':id',
+            builder: (context, state) => TaskDetailsScreen(taskId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(path: 'edit', builder: (context, state) => TaskFormScreen(taskId: state.pathParameters['id'])),
+            ],
+          ),
+        ],
+      ),
     ],
   );
 });

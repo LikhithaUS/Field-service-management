@@ -4,8 +4,8 @@ Cross-platform client (Android, iOS, Web, Windows) for **ServiceHub**, an Employ
 Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 
 > Status: authentication (login, register, forgot/reset password, session restore), a role-aware
-> dashboard, **Employees** (list with search/filters/pagination, details, create/edit/delete) and
-> **Departments** (admin CRUD) are complete.
+> dashboard, **Employees** (list with search/filters/pagination, details, create/edit/delete),
+> **Departments** (admin CRUD) and **Tasks** (assignment, status workflow, comments) are complete.
 
 ## Screens
 
@@ -15,6 +15,8 @@ Management Platform. Talks to the Node.js/Express backend in `../../backend`.
 | Dashboard | Signed-in users (tiles differ by role) |
 | Employees list / details / create / edit | Admin, Manager (managers can't delete or assign roles) |
 | Departments | Admin |
+| Tasks list / details | Everyone (employees see only *My tasks*) |
+| Create / edit task | Admin, Manager |
 
 Role rules are enforced by the backend; the app mirrors them (router guards and hidden buttons)
 so users never see actions that would fail.
@@ -22,6 +24,12 @@ so users never see actions that would fail.
 **New employee onboarding:** when an admin/manager creates an employee, the backend emails a setup
 code (printed to the backend console for now). The employee opens the app, taps
 *Forgot password?* → *I already have a code*, and sets their password.
+
+**Tasks:** staff create a task, pick the assignee from a searchable employee list (or "Assign to
+me"), and set priority, due date and job-site location. The assignee moves it through
+*Start task* → *Mark completed* (and can *Reopen*); only staff can cancel, edit or delete.
+Overdue tasks (still open, due date before today) are highlighted, and each task has a comment
+thread for back-and-forth between the manager and the employee.
 
 ## Tech Stack
 

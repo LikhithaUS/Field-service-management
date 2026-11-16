@@ -14,7 +14,8 @@ class DashboardScreen extends ConsumerWidget {
   static const _modules = <_Module>[
     _Module('Employees', Icons.badge_outlined, {UserRole.admin, UserRole.manager}, route: AppRoutes.employees),
     _Module('Departments', Icons.apartment_outlined, {UserRole.admin}, route: AppRoutes.departments),
-    _Module('Tasks', Icons.task_alt_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
+    _Module('Tasks', Icons.task_alt_outlined, {UserRole.admin, UserRole.manager, UserRole.employee},
+        route: AppRoutes.tasks),
     _Module('Attendance', Icons.schedule_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
     _Module('Leave', Icons.beach_access_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),
     _Module('Notifications', Icons.notifications_outlined, {UserRole.admin, UserRole.manager, UserRole.employee}),

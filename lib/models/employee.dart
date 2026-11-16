@@ -20,6 +20,7 @@ class Employee {
     required this.employeeId,
     required this.name,
     required this.email,
+    this.userId,
     this.phone = '',
     this.designation = '',
     this.department,
@@ -33,6 +34,9 @@ class Employee {
   final String employeeId; // human-friendly, e.g. EMP-0001
   final String name;
   final String email;
+
+  /// The linked login account. Tasks are assigned to accounts, so the assignee picker uses this.
+  final String? userId;
   final String phone;
   final String designation;
   final Department? department;
@@ -55,6 +59,7 @@ class Employee {
         employeeId: json['employeeId'] as String,
         name: json['name'] as String,
         email: json['email'] as String,
+        userId: json['user'] is String ? json['user'] as String : null,
         phone: json['phone'] as String? ?? '',
         designation: json['designation'] as String? ?? '',
         department: json['department'] == null ? null : Department.fromJson(json['department'] as Object),

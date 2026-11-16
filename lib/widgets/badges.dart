@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/employee.dart';
+import '../models/task.dart';
 import '../models/user.dart';
 
 /// Circle with the person's initials (replaced by a photo once uploads exist).
@@ -66,6 +67,45 @@ class RoleBadge extends StatelessWidget {
       UserRole.manager =>
         _Pill(label: role.label, background: scheme.secondaryContainer, foreground: scheme.onSecondaryContainer),
       UserRole.employee => _Pill(label: role.label, background: scheme.primaryContainer, foreground: scheme.onPrimaryContainer),
+    };
+  }
+}
+
+class TaskStatusBadge extends StatelessWidget {
+  const TaskStatusBadge({super.key, required this.status});
+
+  final TaskStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (status) {
+      TaskStatus.pending =>
+        _Pill(label: status.label, background: scheme.surfaceContainerHighest, foreground: scheme.onSurfaceVariant),
+      TaskStatus.inProgress =>
+        _Pill(label: status.label, background: scheme.primaryContainer, foreground: scheme.onPrimaryContainer),
+      TaskStatus.completed =>
+        _Pill(label: status.label, background: scheme.tertiaryContainer, foreground: scheme.onTertiaryContainer),
+      TaskStatus.cancelled => _Pill(label: status.label, background: scheme.outlineVariant, foreground: scheme.onSurface),
+    };
+  }
+}
+
+class PriorityBadge extends StatelessWidget {
+  const PriorityBadge({super.key, required this.priority});
+
+  final TaskPriority priority;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (priority) {
+      TaskPriority.low =>
+        _Pill(label: priority.label, background: scheme.surfaceContainerHighest, foreground: scheme.onSurfaceVariant),
+      TaskPriority.medium =>
+        _Pill(label: priority.label, background: scheme.secondaryContainer, foreground: scheme.onSecondaryContainer),
+      TaskPriority.high => _Pill(label: priority.label, background: scheme.errorContainer, foreground: scheme.onErrorContainer),
+      TaskPriority.urgent => _Pill(label: priority.label, background: scheme.error, foreground: scheme.onError),
     };
   }
 }

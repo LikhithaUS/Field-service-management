@@ -31,4 +31,5 @@ class ApiConstants {
   // Resources
   static const String employees = '/employees';
   static const String departments = '/departments';
+  static const String tasks = '/tasks';
 }

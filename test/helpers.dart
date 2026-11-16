@@ -8,12 +8,15 @@ import 'package:fsm_app/models/department.dart';
 import 'package:fsm_app/models/employee.dart';
 import 'package:fsm_app/models/employee_query.dart';
 import 'package:fsm_app/models/paginated.dart';
+import 'package:fsm_app/models/task.dart';
+import 'package:fsm_app/models/task_query.dart';
 import 'package:fsm_app/models/user.dart';
 import 'package:fsm_app/providers/service_providers.dart';
 import 'package:fsm_app/services/api_service.dart';
 import 'package:fsm_app/services/auth_service.dart';
 import 'package:fsm_app/services/department_service.dart';
 import 'package:fsm_app/services/employee_service.dart';
+import 'package:fsm_app/services/task_service.dart';
 
 class MockAuthService extends Mock implements AuthService {}
 
@@ -22,6 +25,8 @@ class MockApiService extends Mock implements ApiService {}
 class MockEmployeeService extends Mock implements EmployeeService {}
 
 class MockDepartmentService extends Mock implements DepartmentService {}
+
+class MockTaskService extends Mock implements TaskService {}
 
 const adminUser = User(id: 'u1', name: 'Root Admin', email: 'root@example.com', role: UserRole.admin, employeeId: 'EMP-0001');
 const managerUser = User(id: 'u2', name: 'Maya Manager', email: 'maya@example.com', role: UserRole.manager);
@@ -41,7 +46,30 @@ Employee makeEmployee(int n, {UserRole role = UserRole.employee, Department? dep
       joiningDate: DateTime(2026, 1, n),
     );
 
-Paginated<Employee> pageOf(List<Employee> items, {int page = 1, int total = -1, int limit = 10}) {
+TaskPerson personFrom(User u) => TaskPerson(id: u.id, name: u.name, email: u.email, role: u.role);
+
+Task makeTask(
+  int n, {
+  User assignee = employeeUser,
+  TaskStatus status = TaskStatus.pending,
+  TaskPriority priority = TaskPriority.medium,
+  DateTime? dueDate,
+}) =>
+    Task(
+      id: 't$n',
+      taskNumber: 'TSK-${n.toString().padLeft(4, '0')}',
+      title: 'Job $n',
+      description: 'Details for job $n',
+      location: 'Site $n',
+      assignedTo: personFrom(assignee),
+      assignedBy: personFrom(managerUser),
+      status: status,
+      priority: priority,
+      dueDate: dueDate,
+      createdAt: DateTime(2026, 11, 1, 9, 30),
+    );
+
+Paginated<T> pageOf<T>(List<T> items, {int page = 1, int total = -1, int limit = 10}) {
   final t = total < 0 ? items.length : total;
   return Paginated(items: items, page: page, limit: limit, total: t, totalPages: (t / limit).ceil().clamp(1, 1 << 30));
 }
@@ -50,6 +78,7 @@ class TestServices {
   final auth = MockAuthService();
   final employees = MockEmployeeService();
   final departments = MockDepartmentService();
+  final tasks = MockTaskService();
 
   TestServices({User? signedInAs}) {
     when(() => auth.currentUser()).thenAnswer((_) async => signedInAs);
@@ -59,6 +88,8 @@ class TestServices {
 
 void registerTestFallbacks() {
   registerFallbackValue(const EmployeeQuery());
+  registerFallbackValue(const TaskQuery());
+  registerFallbackValue(TaskStatus.pending);
   registerFallbackValue(<String, dynamic>{});
 }
 
@@ -74,6 +105,7 @@ Future<void> pumpApp(WidgetTester tester, TestServices services, {Size size = co
       apiServiceProvider.overrideWithValue(MockApiService()),
       employeeServiceProvider.overrideWithValue(services.employees),
       departmentServiceProvider.overrideWithValue(services.departments),
+      taskServiceProvider.overrideWithValue(services.tasks),
     ],
     child: const ServiceHubApp(),
   ));
