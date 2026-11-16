@@ -3,8 +3,8 @@
 REST API for **ServiceHub**, an Employee & Field Service Management Platform.
 Built with Node.js, Express 5, MongoDB (Mongoose), JWT authentication and role-based access control.
 
-> Status: authentication (incl. forgot/reset password), **employees** and **departments** are complete.
-> Tasks, attendance, leaves, notifications and dashboard modules are coming next.
+> Status: authentication (incl. forgot/reset password), **employees**, **departments** and **tasks**
+> (with comments) are complete. Attendance, leaves, notifications and dashboard modules are coming next.
 
 ## Tech Stack
 
@@ -108,6 +108,33 @@ List responses: `{ items: [...], pagination: { page, limit, total, totalPages } 
 - Setting `status: inactive` blocks login and revokes the person's sessions immediately.
 - Creating an employee whose email belongs to a self-registered account links that account
   instead of creating a second one.
+
+### Tasks
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/tasks` | Authenticated | `?search=&status=&priority=&assignedTo=&mine=true&overdue=true&sort=&page=&limit=` |
+| GET | `/api/tasks/:id` | Staff, or the assignee | One task with `assignedTo`/`assignedBy` populated and `commentCount` |
+| POST | `/api/tasks` | Admin, Manager | Create; gets a sequential `taskNumber` (`TSK-0001`) |
+| PUT | `/api/tasks/:id` | Staff, or the assignee | Staff edit anything; the assignee can only change `status` |
+| DELETE | `/api/tasks/:id` | Admin, Manager | Deletes the task and its comments |
+| GET | `/api/tasks/:id/comments` | Staff, or the assignee | Thread, oldest first, with each author |
+| POST | `/api/tasks/:id/comments` | Staff, or the assignee | `{ message }` (1–1000 chars) |
+
+- Statuses: `pending`, `in_progress`, `completed`, `cancelled`. Priorities: `low`, `medium`, `high`, `urgent`.
+- `sort`: `createdAt`, `dueDate`, `title` (prefix `-` for descending; default `-createdAt`).
+
+**Business rules**
+
+- Employees only ever see tasks assigned to them; `assignedTo` filters are ignored for them, and
+  someone else's task returns **404** (not 403), so its existence isn't revealed.
+- The assignee may move between `pending`, `in_progress` and `completed`, but cannot cancel a task
+  or change a cancelled one.
+- `completedAt` is set automatically when a task becomes `completed` and cleared if it is reopened.
+- A task is **overdue** when it is still open and its due date is before today. Due dates are
+  stored as midnight UTC of the chosen day.
+- Tasks can only be assigned to active accounts. Assignees reference **users** (login accounts),
+  because permissions are checked against the signed-in user.
 
 ## Password Reset & Account Setup
 
